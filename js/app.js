@@ -64,12 +64,90 @@ class ThemeManager {
     }
 }
 
+// Mobile Menu Management
+class MobileMenuManager {
+    constructor() {
+        this.mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        this.navMenu = document.getElementById('navMenu');
+        this.navLinks = document.querySelectorAll('.nav-link');
+        this.isMenuOpen = false;
+        
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Mobile menu toggle
+        this.mobileMenuToggle?.addEventListener('click', () => {
+            this.toggleMobileMenu();
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.isMenuOpen && 
+                !this.navMenu.contains(e.target) && 
+                !this.mobileMenuToggle.contains(e.target)) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // Close menu when clicking on nav links
+        this.navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                this.closeMobileMenu();
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768 && this.isMenuOpen) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isMenuOpen) {
+                this.closeMobileMenu();
+            }
+        });
+    }
+
+    toggleMobileMenu() {
+        if (this.isMenuOpen) {
+            this.closeMobileMenu();
+        } else {
+            this.openMobileMenu();
+        }
+    }
+
+    openMobileMenu() {
+        this.navMenu.classList.add('active');
+        this.mobileMenuToggle.innerHTML = '<i class="fas fa-times"></i>';
+        this.mobileMenuToggle.setAttribute('aria-expanded', 'true');
+        this.isMenuOpen = true;
+        
+        // Prevent body scrolling when menu is open
+        document.body.style.overflow = 'hidden';
+    }
+
+    closeMobileMenu() {
+        this.navMenu.classList.remove('active');
+        this.mobileMenuToggle.innerHTML = '<i class="fas fa-bars"></i>';
+        this.mobileMenuToggle.setAttribute('aria-expanded', 'false');
+        this.isMenuOpen = false;
+        
+        // Restore body scrolling
+        document.body.style.overflow = '';
+    }
+}
+
 // Main Application Controller
 class OgaStockApp {
     constructor() {
         this.currentSection = 'dashboard';
         this.isOnline = navigator.onLine;
         this.themeManager = new ThemeManager();
+        this.mobileMenuManager = new MobileMenuManager();
         this.init();
     }
 

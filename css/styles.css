@@ -166,6 +166,349 @@ a:hover {
     font-size: 0.8rem;
 }
 
+/* Mobile Menu Toggle Button */
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    order: 1;
+}
+
+.mobile-menu-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile Navigation Styles */
+@media (max-width: 768px) {
+    .nav-container {
+        padding: 0 15px;
+        height: 60px;
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .mobile-menu-toggle {
+        display: block;
+        order: 1;
+    }
+
+    .nav-logo {
+        font-size: 1.3rem;
+        order: 2;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .nav-user {
+        order: 3;
+        gap: 10px;
+        margin-left: auto;
+    }
+
+    .nav-menu {
+        position: fixed;
+        top: 60px;
+        left: 0;
+        right: 0;
+        background: linear-gradient(135deg, #2196F3, #21CBF3);
+        flex-direction: column;
+        gap: 0;
+        padding: 20px 0;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        transform: translateY(-100vh);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        z-index: 999;
+    }
+
+    .nav-menu.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .nav-link {
+        width: 100%;
+        padding: 15px 30px;
+        border-radius: 0;
+        justify-content: flex-start;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        background: rgba(255, 255, 255, 0.15);
+        transform: none;
+        padding-left: 40px;
+    }
+
+    .nav-link i {
+        width: 20px;
+        text-align: center;
+        margin-right: 10px;
+    }
+
+    /* Adjust online status for mobile */
+    .online-status {
+        font-size: 0.8rem;
+    }
+
+    .theme-toggle {
+        font-size: 1.1rem;
+        padding: 6px;
+        width: 35px;
+        height: 35px;
+    }
+
+    /* Main content adjustment for mobile */
+    .main-content {
+        margin-top: 60px;
+        padding: 15px;
+    }
+
+    /* Section headers mobile layout */
+    .section-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: stretch;
+    }
+
+    .section-header h2 {
+        font-size: 1.3rem;
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    /* Stats grid mobile layout */
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+    }
+
+    .stat-card {
+        padding: 15px;
+    }
+
+    .stat-card h3 {
+        font-size: 1.3rem;
+    }
+
+    /* Dashboard widgets */
+    .dashboard-widgets {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* Products grid */
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    /* Search and filter adjustments */
+    .search-filter {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .search-filter input,
+    .search-filter select {
+        width: 100%;
+    }
+
+    /* Sales filters */
+    .sales-filters {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .filter-group {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    /* Table responsiveness */
+    .orders-table-container,
+    .sales-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .orders-table,
+    .sales-table {
+        min-width: 600px;
+    }
+
+    /* Modal adjustments */
+    .modal-content {
+        margin: 10px;
+        max-height: calc(100vh - 20px);
+        overflow-y: auto;
+    }
+
+    .large-modal {
+        width: calc(100vw - 20px);
+        max-width: none;
+    }
+
+    /* Report controls */
+    .report-controls .date-range {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .report-tabs {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .tab-btn {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    /* Button adjustments */
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Form adjustments */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+    .nav-container {
+        padding: 0 10px;
+    }
+
+    .nav-logo {
+        font-size: 1.2rem;
+    }
+
+    .nav-logo span {
+        display: none;
+    }
+
+    .nav-user {
+        gap: 8px;
+    }
+
+    .online-status span {
+        display: none;
+    }
+
+    .nav-link {
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+        padding-left: 30px;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .stat-card {
+        text-align: center;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-actions .btn {
+        width: auto;
+        flex: 1;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .nav-menu {
+        gap: 20px;
+    }
+
+    .nav-link {
+        font-size: 0.95rem;
+        padding: 8px 12px;
+    }
+}
+
+/* Dark mode navigation adjustments */
+[data-theme="dark"] .navbar {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+}
+
+[data-theme="dark"] .nav-menu {
+    background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+    .nav-menu,
+    .nav-link,
+    .theme-toggle,
+    .mobile-menu-toggle {
+        transition: none;
+    }
+}
+
+/* Focus styles for accessibility */
+.nav-link:focus,
+.theme-toggle:focus,
+.mobile-menu-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+    .nav-menu {
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+    }
+
+    .main-content {
+        padding: 10px;
+    }
+}
+
 /* Main Content */
 .main-content {
     margin-top: 60px;
