@@ -669,3 +669,64 @@
 .sales-stats .stat-card .stat-info p {
     color: #000000 !important;
 }
+
+/* Additional Light Theme Enforcement for Sales */
+[data-theme="light"] .sales-filters,
+.sales-filters {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .quick-sales-panel,
+.quick-sales-panel {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .sale-item,
+.sale-item {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+    border-color: var(--border-color, #ddd) !important;
+}
+
+[data-theme="light"] .filter-group label,
+.filter-group label {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .filter-group select,
+[data-theme="light"] .filter-group input,
+.filter-group select, .filter-group input {
+    background: var(--input-bg, white) !important;
+    color: var(--text-color, #333) !important;
+    border-color: var(--border-color, #ddd) !important;
+}
+
+/* Additional Dark Theme Enforcement for Sales */
+[data-theme="dark"] .sales-filters {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .quick-sales-panel {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .sale-item {
+    background: var(--card-bg, #3d3d3d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #555) !important;
+}
+
+[data-theme="dark"] .filter-group label {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .filter-group select,
+[data-theme="dark"] .filter-group input {
+    background: var(--input-bg, #3d3d3d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #555) !important;
+}

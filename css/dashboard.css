@@ -420,3 +420,58 @@
 [data-theme="dark"] .empty-state h3 {
     color: #ffffff;
 }
+
+/* Light Theme Enforcement for Dashboard */
+[data-theme="light"] .stats-grid .stat-card,
+.stats-grid .stat-card {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .stat-info h3,
+[data-theme="light"] .stat-info p,
+.stat-info h3, .stat-info p {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .dashboard-widgets .widget,
+.dashboard-widgets .widget {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .widget h3,
+.widget h3 {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .transaction-item,
+[data-theme="light"] .low-stock-item,
+.transaction-item, .low-stock-item {
+    color: var(--text-color, #333) !important;
+}
+
+/* Enhanced Dark Theme for Dashboard */
+[data-theme="dark"] .stats-grid .stat-card {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .stat-info h3,
+[data-theme="dark"] .stat-info p {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .dashboard-widgets .widget {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .widget h3 {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .transaction-item,
+[data-theme="dark"] .low-stock-item {
+    color: var(--text-color, #ffffff) !important;
+}

@@ -451,3 +451,69 @@
 [data-theme="dark"] .timeline-date {
     color: #cccccc;
 }
+
+/* Light Theme Enforcement for Orders */
+[data-theme="light"] .orders-table-container,
+.orders-table-container {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .orders-table th,
+.orders-table th {
+    background: var(--border-color, #f8f9fa) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .orders-table td,
+.orders-table td {
+    color: var(--text-color, #333) !important;
+    border-color: var(--border-color, #f0f0f0) !important;
+}
+
+[data-theme="light"] .order-modal .modal-content,
+.order-modal .modal-content {
+    background: var(--modal-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .order-details .detail-row,
+.order-details .detail-row {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .order-filters,
+.order-filters {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+/* Enhanced Dark Theme for Orders */
+[data-theme="dark"] .orders-table-container {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .orders-table th {
+    background: var(--border-color, #1a1a1a) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .orders-table td {
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444) !important;
+}
+
+[data-theme="dark"] .order-modal .modal-content {
+    background: var(--modal-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .order-details .detail-row {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .order-filters {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}

@@ -916,13 +916,59 @@ a:hover {
     --shadow: rgba(0,0,0,0.3);
 }
 
+/* Light Theme Enforcement */
+[data-theme="light"] {
+    --bg-color: #f5f5f5 !important;
+    --text-color: #333333 !important;
+    --text-secondary: #666666 !important;
+    --text-muted: #999999 !important;
+    --card-bg: #ffffff !important;
+    --border-color: #ddd !important;
+    --input-bg: #ffffff !important;
+    --modal-bg: #ffffff !important;
+    --shadow: rgba(0,0,0,0.1) !important;
+}
+
+[data-theme="light"] body,
+body {
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="light"] h1, [data-theme="light"] h2, [data-theme="light"] h3, 
+[data-theme="light"] h4, [data-theme="light"] h5, [data-theme="light"] h6,
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-color) !important;
+}
+
+[data-theme="light"] .content-section,
+.content-section {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="light"] .stat-card,
+[data-theme="light"] .product-card,
+[data-theme="light"] .order-card,
+.stat-card, .product-card, .order-card {
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
+}
+
+/* Dark Theme Enforcement */
 [data-theme="dark"] body {
-    background-color: var(--bg-color);
-    color: var(--text-color);
+    background-color: var(--bg-color) !important;
+    color: var(--text-color) !important;
+}
+
+[data-theme="dark"] h1, [data-theme="dark"] h2, [data-theme="dark"] h3, 
+[data-theme="dark"] h4, [data-theme="dark"] h5, [data-theme="dark"] h6 {
+    color: var(--text-color) !important;
 }
 
 [data-theme="dark"] .content-section {
-    background-color: var(--card-bg);
+    background-color: var(--card-bg) !important;
+    color: var(--text-color) !important;
 }
 
 [data-theme="dark"] .stat-card,

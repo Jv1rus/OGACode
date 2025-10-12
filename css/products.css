@@ -460,3 +460,77 @@
 [data-theme="dark"] .products-empty p {
     color: #cccccc;
 }
+
+/* Light Theme Enforcement for Products */
+[data-theme="light"] .product-card,
+.product-card {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .product-name,
+[data-theme="light"] .product-sku,
+[data-theme="light"] .product-category,
+.product-name, .product-sku, .product-category {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .detail-label,
+[data-theme="light"] .detail-value,
+.detail-label, .detail-value {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .modal-content,
+.modal-content {
+    background: var(--modal-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .form-group label,
+.form-group label {
+    color: var(--text-color, #333) !important;
+}
+
+[data-theme="light"] .form-group input,
+[data-theme="light"] .form-group select,
+[data-theme="light"] .form-group textarea,
+.form-group input, .form-group select, .form-group textarea {
+    background: var(--input-bg, white) !important;
+    color: var(--text-color, #333) !important;
+    border-color: var(--border-color, #ddd) !important;
+}
+
+/* Enhanced Dark Theme for Products */
+[data-theme="dark"] .product-card {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .product-name,
+[data-theme="dark"] .product-sku,
+[data-theme="dark"] .product-category {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .detail-label,
+[data-theme="dark"] .detail-value {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .modal-content {
+    background: var(--modal-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .form-group label {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .form-group input,
+[data-theme="dark"] .form-group select,
+[data-theme="dark"] .form-group textarea {
+    background: var(--input-bg, #3d3d3d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444) !important;
+}
