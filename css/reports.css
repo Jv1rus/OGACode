@@ -757,7 +757,7 @@
 [data-theme="dark"] .summary-card {
     background: var(--card-bg, #2d2d2d) !important;
     color: var(--text-color, #ffffff) !important;
-    border-color: var(--border-color, #444444) !important;
+    border-color: var(--border-color, #050000) !important;
 }
 
 [data-theme="dark"] .summary-card .metric-value,
@@ -773,7 +773,7 @@
 [data-theme="dark"] .chart-wrapper {
     background: var(--card-bg, #2d2d2d) !important;
     color: var(--text-color, #ffffff) !important;
-    border-color: var(--border-color, #444444) !important;
+    border-color: var(--border-color, #070000) !important;
 }
 
 [data-theme="dark"] .chart-wrapper h4 {
