@@ -656,3 +656,11 @@
     background-color: #f44336;
     color: white;
 }
+
+/* Light Mode Styles for Sales Stats */
+[data-theme="light"] .sales-stats .stat-card .stat-info h3,
+[data-theme="light"] .sales-stats .stat-card .stat-info p,
+.sales-stats .stat-card .stat-info h3,
+.sales-stats .stat-card .stat-info p {
+    color: #000000 !important;
+}
