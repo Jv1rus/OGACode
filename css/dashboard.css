@@ -139,7 +139,7 @@
 
 /* Low Stock Items */
 .low-stock-list {
-    max-height: 120px;
+    max-height: 100px;
     overflow-y: auto;
 }
 
