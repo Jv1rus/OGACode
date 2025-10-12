@@ -572,9 +572,14 @@
 }
 
 /* Dark Mode Styles for Sales */
+[data-theme="dark"] .sales-stats .stat-card {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
 [data-theme="dark"] .sales-stats-grid .stat-card {
-    background-color: #2d2d2d;
-    border-color: #444;
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
 }
 
 [data-theme="dark"] .quick-sales-panel {
@@ -663,11 +668,28 @@
 }
 
 /* Light Mode Styles for Sales Stats */
+[data-theme="light"] .sales-stats .stat-card,
+.sales-stats .stat-card {
+    background: var(--card-bg, white) !important;
+    color: var(--text-color, #333) !important;
+}
+
 [data-theme="light"] .sales-stats .stat-card .stat-info h3,
 [data-theme="light"] .sales-stats .stat-card .stat-info p,
 .sales-stats .stat-card .stat-info h3,
 .sales-stats .stat-card .stat-info p {
-    color: #000000 !important;
+    color: var(--text-color, #333) !important;
+}
+
+/* Dark Mode Styles for Sales Stats */
+[data-theme="dark"] .sales-stats .stat-card {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .sales-stats .stat-card .stat-info h3,
+[data-theme="dark"] .sales-stats .stat-card .stat-info p {
+    color: var(--text-color, #ffffff) !important;
 }
 
 /* Additional Light Theme Enforcement for Sales */

@@ -826,12 +826,12 @@
 }
 
 [data-theme="dark"] .export-btn:hover {
-    background: var(--text-accent, #2196F3) !important;
+    background: var(--text-accent, #a9c1d4) !important;
     color: var(--card-bg, #ffffff) !important;
 }
 
 [data-theme="dark"] .export-btn.primary {
-    background: var(--text-accent, #2196F3) !important;
+    background: var(--text-accent, #a9c1d4) !important;
     color: var(--card-bg, #ffffff) !important;
 }
 
