@@ -607,8 +607,8 @@
 }
 
 [data-theme="dark"] .sales-table th {
-    color: #000000 !important;
-    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    color: #ffffff !important;
+    background: #000000 !important;
 }
 
 [data-theme="dark"] .sale-item {
