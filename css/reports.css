@@ -620,3 +620,244 @@
 [data-theme="dark"] .tab-btn:hover {
     color: #2196F3 !important;
 }
+
+/* ==================== COMPREHENSIVE REPORTS THEME ENFORCEMENT ==================== */
+
+/* Light Theme Enforcement for ALL Report Widgets */
+[data-theme="light"] .report-controls,
+.report-controls {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .report-summary,
+.report-summary {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .summary-card,
+.summary-card {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .summary-card .metric-value,
+[data-theme="light"] .summary-card .metric-label,
+.summary-card .metric-value,
+.summary-card .metric-label {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .charts-container,
+.charts-container {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .chart-wrapper,
+.chart-wrapper {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .chart-wrapper h4,
+.chart-wrapper h4 {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .chart-placeholder,
+.chart-placeholder {
+    background: var(--border-color, #f8f9fa) !important;
+    color: var(--text-secondary, #666666) !important;
+}
+
+[data-theme="light"] .metric-box,
+.metric-box {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .metric-box .metric-value,
+.metric-box .metric-value {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .metric-box .metric-label,
+.metric-box .metric-label {
+    color: var(--text-secondary, #666666) !important;
+}
+
+[data-theme="light"] .po-summary,
+.po-summary {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .po-stat,
+.po-stat {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+    border-color: var(--border-color, #ddd) !important;
+}
+
+[data-theme="light"] .po-stat .stat-number,
+.po-stat .stat-number {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .export-options,
+.export-options {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .export-btn,
+.export-btn {
+    background: var(--card-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+    border-color: var(--border-color, #ddd) !important;
+}
+
+[data-theme="light"] .date-range label,
+.date-range label {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="light"] .date-range input,
+.date-range input {
+    background: var(--input-bg, #ffffff) !important;
+    color: var(--text-color, #333333) !important;
+    border-color: var(--border-color, #e0e0e0) !important;
+}
+
+[data-theme="light"] .tab-btn,
+.tab-btn {
+    color: var(--text-secondary, #666666) !important;
+}
+
+[data-theme="light"] .tab-btn.active,
+[data-theme="light"] .tab-btn:hover,
+.tab-btn.active,
+.tab-btn:hover {
+    color: var(--text-accent, #2196F3) !important;
+}
+
+/* Enhanced Dark Theme for ALL Report Widgets */
+[data-theme="dark"] .report-controls {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .report-summary {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .summary-card {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444444) !important;
+}
+
+[data-theme="dark"] .summary-card .metric-value,
+[data-theme="dark"] .summary-card .metric-label {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .charts-container {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .chart-wrapper {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444444) !important;
+}
+
+[data-theme="dark"] .chart-wrapper h4 {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .chart-placeholder {
+    background: var(--border-color, #1a1a1a) !important;
+    color: var(--text-secondary, #cccccc) !important;
+}
+
+[data-theme="dark"] .metric-box {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444444) !important;
+}
+
+[data-theme="dark"] .metric-box .metric-value {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .metric-box .metric-label {
+    color: var(--text-secondary, #cccccc) !important;
+}
+
+[data-theme="dark"] .po-summary {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .po-stat {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444444) !important;
+}
+
+[data-theme="dark"] .po-stat .stat-number {
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .export-options {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+}
+
+[data-theme="dark"] .export-btn {
+    background: var(--card-bg, #2d2d2d) !important;
+    color: var(--text-color, #ffffff) !important;
+    border-color: var(--border-color, #444444) !important;
+}
+
+[data-theme="dark"] .export-btn:hover {
+    background: var(--text-accent, #2196F3) !important;
+    color: var(--card-bg, #ffffff) !important;
+}
+
+[data-theme="dark"] .export-btn.primary {
+    background: var(--text-accent, #2196F3) !important;
+    color: var(--card-bg, #ffffff) !important;
+}
+
+/* Additional Report Widget Elements */
+[data-theme="light"] .report-loading,
+[data-theme="light"] .report-empty,
+[data-theme="light"] .report-error,
+.report-loading, .report-empty, .report-error {
+    color: var(--text-secondary, #666666) !important;
+}
+
+[data-theme="light"] .report-loading h3,
+[data-theme="light"] .report-empty h3,
+[data-theme="light"] .report-error h3,
+.report-loading h3, .report-empty h3, .report-error h3 {
+    color: var(--text-color, #333333) !important;
+}
+
+[data-theme="dark"] .report-loading,
+[data-theme="dark"] .report-empty,
+[data-theme="dark"] .report-error {
+    color: var(--text-secondary, #cccccc) !important;
+}
+
+[data-theme="dark"] .report-loading h3,
+[data-theme="dark"] .report-empty h3,
+[data-theme="dark"] .report-error h3 {
+    color: var(--text-color, #ffffff) !important;
+}
