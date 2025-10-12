@@ -543,3 +543,80 @@
 [data-theme="dark"] .report-empty h3 {
     color: #ffffff;
 }
+
+/* Light Theme Enforcement for Reports */
+[data-theme="light"] .report-controls,
+.report-controls {
+    background: #ffffff !important;
+    color: #333333 !important;
+}
+
+[data-theme="light"] .report-table,
+.report-table {
+    background: #ffffff !important;
+    color: #333333 !important;
+}
+
+[data-theme="light"] .report-table th {
+    background: #f8f9fa !important;
+    color: #333333 !important;
+}
+
+[data-theme="light"] .report-table td {
+    color: #333333 !important;
+}
+
+[data-theme="light"] .inventory-alerts,
+.inventory-alerts {
+    background: #fff3cd !important;
+    border-color: #ffeaa7 !important;
+}
+
+[data-theme="light"] .inventory-alerts h4,
+.inventory-alerts h4 {
+    color: #856404 !important;
+}
+
+/* Dark Theme Enforcement for Reports */
+[data-theme="dark"] .report-controls {
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .report-table {
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .report-table th {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .report-table td {
+    color: #ffffff !important;
+    border-bottom-color: #444444 !important;
+}
+
+[data-theme="dark"] .report-table tbody tr:hover {
+    background-color: #3d3d3d !important;
+}
+
+[data-theme="dark"] .date-range label {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .date-range input {
+    background: #3d3d3d !important;
+    border-color: #555555 !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .tab-btn {
+    color: #cccccc !important;
+}
+
+[data-theme="dark"] .tab-btn.active,
+[data-theme="dark"] .tab-btn:hover {
+    color: #2196F3 !important;
+}
