@@ -606,6 +606,11 @@
     background-color: #2d2d2d;
 }
 
+[data-theme="dark"] .sales-table th {
+    color: #000000 !important;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
 [data-theme="dark"] .sale-item {
     background-color: #3d3d3d;
     border-color: #555;
