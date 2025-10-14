@@ -282,6 +282,68 @@ a:hover {
     transform: translateY(-7px) rotate(-45deg);
 }
 
+/* Desktop Navigation Toggle Button */
+.nav-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
+    margin-right: 15px;
+}
+
+.nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+}
+
+.nav-toggle:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.8);
+    outline-offset: 2px;
+}
+
+.nav-toggle i {
+    transition: transform 0.3s ease;
+}
+
+.nav-toggle.active i {
+    transform: rotate(90deg);
+}
+
+/* Collapsible Navigation Menu */
+.nav-menu.collapsed {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px) scale(0.95);
+    pointer-events: none;
+}
+
+.nav-menu {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced nav container for collapse animation */
+.nav-container {
+    transition: all 0.3s ease;
+}
+
+.nav-menu.collapsed ~ .nav-user {
+    transition: all 0.3s ease;
+}
+
+/* Visual feedback for collapsed state */
+.nav-toggle.active {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
 /* Enhanced responsive navigation typography */
 @media (max-width: 768px) {
     .nav-logo {
@@ -556,6 +618,10 @@ a:hover {
     .mobile-menu-toggle {
         display: flex;
         order: 1;
+    }
+
+    .nav-toggle {
+        display: none;
     }
 
     .nav-logo {
@@ -948,6 +1014,19 @@ a:hover {
 
 [data-theme="dark"] .nav-menu {
     background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+}
+
+[data-theme="dark"] .nav-toggle {
+    background: rgba(255, 255, 255, 0.08);
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .nav-toggle:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .nav-toggle.active {
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Accessibility improvements */

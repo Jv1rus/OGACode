@@ -625,6 +625,15 @@
     color: #ffffff;
 }
 
+/* Enhanced dark mode support for inline styled product names */
+[data-theme="dark"] .quick-sale-item div[style*="font-weight: 600"] {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .quick-sale-item div[style*="color: #666"] {
+    color: #cccccc !important;
+}
+
 [data-theme="dark"] .sale-item-details {
     color: #cccccc;
 }

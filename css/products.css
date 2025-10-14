@@ -513,6 +513,20 @@
     color: var(--text-color, #ffffff) !important;
 }
 
+/* Enhanced specificity for product name in dark mode */
+[data-theme="dark"] .product-card .product-name,
+[data-theme="dark"] .product-header .product-name,
+[data-theme="dark"] div.product-name {
+    color: #ffffff !important;
+    opacity: 1 !important;
+}
+
+/* Ensure all product text elements are visible in dark mode */
+[data-theme="dark"] .product-card .product-sku,
+[data-theme="dark"] .product-header .product-sku {
+    color: #e0e0e0 !important;
+}
+
 [data-theme="dark"] .detail-label,
 [data-theme="dark"] .detail-value {
     color: var(--text-color, #ffffff) !important;

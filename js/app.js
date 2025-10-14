@@ -268,6 +268,104 @@ class MobileMenuManager {
     }
 }
 
+// Desktop Navigation Manager
+class DesktopNavManager {
+    constructor() {
+        this.navToggle = document.getElementById('navToggle');
+        this.navMenu = document.getElementById('navMenu');
+        this.isCollapsed = false;
+        
+        this.init();
+    }
+
+    init() {
+        if (!this.navToggle || !this.navMenu) return;
+        
+        this.setupEventListeners();
+        this.restoreNavState();
+    }
+
+    setupEventListeners() {
+        // Toggle button click
+        this.navToggle.addEventListener('click', () => {
+            this.toggleNav();
+        });
+
+        // Keyboard support
+        this.navToggle.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.toggleNav();
+            }
+        });
+
+        // Save state when window is about to unload
+        window.addEventListener('beforeunload', () => {
+            this.saveNavState();
+        });
+
+        // Handle window resize - show nav on desktop, respect state
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                this.handleDesktopResize();
+            }
+        });
+    }
+
+    toggleNav() {
+        this.isCollapsed = !this.isCollapsed;
+        this.updateNavDisplay();
+        this.saveNavState();
+    }
+
+    updateNavDisplay() {
+        const icon = this.navToggle.querySelector('i');
+        
+        if (this.isCollapsed) {
+            this.navMenu.classList.add('collapsed');
+            this.navToggle.classList.add('active');
+            this.navToggle.setAttribute('aria-expanded', 'false');
+            icon.className = 'fas fa-chevron-right';
+        } else {
+            this.navMenu.classList.remove('collapsed');
+            this.navToggle.classList.remove('active');
+            this.navToggle.setAttribute('aria-expanded', 'true');
+            icon.className = 'fas fa-bars';
+        }
+    }
+
+    saveNavState() {
+        localStorage.setItem('ogastock-nav-collapsed', this.isCollapsed.toString());
+    }
+
+    restoreNavState() {
+        const savedState = localStorage.getItem('ogastock-nav-collapsed');
+        if (savedState !== null) {
+            this.isCollapsed = savedState === 'true';
+            this.updateNavDisplay();
+        }
+    }
+
+    handleDesktopResize() {
+        // Ensure nav state is properly applied on desktop
+        if (window.innerWidth > 768) {
+            this.updateNavDisplay();
+        }
+    }
+
+    expandNav() {
+        this.isCollapsed = false;
+        this.updateNavDisplay();
+        this.saveNavState();
+    }
+
+    collapseNav() {
+        this.isCollapsed = true;
+        this.updateNavDisplay();
+        this.saveNavState();
+    }
+}
+
 // Main Application Controller
 class OgaStockApp {
     constructor() {
@@ -275,6 +373,7 @@ class OgaStockApp {
         this.isOnline = navigator.onLine;
         this.themeManager = new ThemeManager();
         this.mobileMenuManager = new MobileMenuManager();
+        this.desktopNavManager = new DesktopNavManager();
         this.init();
     }
 

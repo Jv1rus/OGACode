@@ -475,3 +475,14 @@
 [data-theme="dark"] .low-stock-item {
     color: var(--text-color, #ffffff) !important;
 }
+
+/* Enhanced dark mode for product names in dashboard */
+[data-theme="dark"] .transaction-info .product-name,
+[data-theme="dark"] .stock-info .product-name {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .transaction-info .transaction-date,
+[data-theme="dark"] .stock-info .stock-level {
+    color: #e0e0e0 !important;
+}

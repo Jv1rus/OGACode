@@ -598,6 +598,12 @@
     border-bottom-color: #444444 !important;
 }
 
+/* Enhanced dark mode for product names and text in reports */
+[data-theme="dark"] .alert-item,
+[data-theme="dark"] .alert-item span {
+    color: #ffffff !important;
+}
+
 [data-theme="dark"] .report-table tbody tr:hover {
     background-color: #3d3d3d !important;
 }
