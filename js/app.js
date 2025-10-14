@@ -160,12 +160,121 @@ class ThemeManager {
     }
 }
 
+// Mobile Menu Manager
+class MobileMenuManager {
+    constructor() {
+        this.mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        this.navMenu = document.getElementById('navMenu');
+        this.navLinks = document.querySelectorAll('.nav-link');
+        this.isMenuOpen = false;
+        
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Mobile menu toggle
+        if (this.mobileMenuToggle) {
+            this.mobileMenuToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.toggleMobileMenu();
+            });
+        }
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (this.isMenuOpen && 
+                !this.navMenu.contains(e.target) && 
+                !this.mobileMenuToggle.contains(e.target)) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // Close menu when clicking on nav links
+        this.navLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                this.closeMobileMenu();
+            });
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768 && this.isMenuOpen) {
+                this.closeMobileMenu();
+            }
+        });
+
+        // Handle escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.isMenuOpen) {
+                this.closeMobileMenu();
+            }
+        });
+    }
+
+    toggleMobileMenu() {
+        if (this.isMenuOpen) {
+            this.closeMobileMenu();
+        } else {
+            this.openMobileMenu();
+        }
+    }
+
+    openMobileMenu() {
+        if (this.navMenu && this.mobileMenuToggle) {
+            this.navMenu.classList.add('active');
+            this.mobileMenuToggle.classList.add('active');
+            this.mobileMenuToggle.setAttribute('aria-expanded', 'true');
+            this.isMenuOpen = true;
+            
+            // Prevent body scrolling when menu is open
+            document.body.style.overflow = 'hidden';
+            
+            // Add focus trap
+            this.trapFocus();
+        }
+    }
+
+    closeMobileMenu() {
+        if (this.navMenu && this.mobileMenuToggle) {
+            this.navMenu.classList.remove('active');
+            this.mobileMenuToggle.classList.remove('active');
+            this.mobileMenuToggle.setAttribute('aria-expanded', 'false');
+            this.isMenuOpen = false;
+            
+            // Restore body scrolling
+            document.body.style.overflow = '';
+            
+            // Remove focus trap
+            this.removeFocusTrap();
+        }
+    }
+
+    trapFocus() {
+        // Simple focus trap for accessibility
+        const focusableElements = this.navMenu.querySelectorAll(
+            'a[href], button, [tabindex]:not([tabindex="-1"])'
+        );
+        
+        if (focusableElements.length > 0) {
+            focusableElements[0].focus();
+        }
+    }
+
+    removeFocusTrap() {
+        // Return focus to toggle button
+        if (this.mobileMenuToggle) {
+            this.mobileMenuToggle.blur();
+        }
+    }
+}
+
 // Main Application Controller
 class OgaStockApp {
     constructor() {
         this.currentSection = 'dashboard';
         this.isOnline = navigator.onLine;
         this.themeManager = new ThemeManager();
+        this.mobileMenuManager = new MobileMenuManager();
         this.init();
     }
 
