@@ -190,6 +190,15 @@ a:hover {
     height: 60px;
 }
 
+/* Adjust spacing when user profile is positioned at the left */
+.nav-container > .user-profile + .mobile-menu-toggle {
+    margin-left: 15px;
+}
+
+.nav-container > .user-profile + .mobile-menu-toggle + .nav-logo {
+    margin-left: 0;
+}
+
 .nav-logo {
     display: flex;
     align-items: center;

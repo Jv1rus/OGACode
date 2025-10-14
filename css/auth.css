@@ -419,6 +419,19 @@
     background-color: #ffebee;
 }
 
+/* User Profile in Left Position */
+.nav-container > .user-profile {
+    margin-right: 0;
+    margin-left: 0;
+    order: -1; /* Move to the beginning */
+    flex-shrink: 0;
+}
+
+.nav-container > .user-profile .user-dropdown {
+    left: 0;
+    right: auto;
+}
+
 /* Loading State */
 .login-btn.loading {
     pointer-events: none;
