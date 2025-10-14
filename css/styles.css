@@ -229,6 +229,13 @@ a:hover {
     align-items: center;
     gap: 15px;
     color: white !important;
+    position: relative;
+}
+
+/* Position the nav toggle at the far right */
+.nav-user .nav-toggle {
+    margin-left: 10px;
+    order: 999;
 }
 
 /* Mobile Menu Toggle Button */
@@ -296,7 +303,10 @@ a:hover {
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 1.1rem;
-    margin-right: 15px;
+    flex-direction: column;
+    gap: 4px;
+    position: relative;
+    z-index: 1001;
 }
 
 .nav-toggle:hover {
@@ -307,6 +317,37 @@ a:hover {
 .nav-toggle:focus {
     outline: 2px solid rgba(255, 255, 255, 0.8);
     outline-offset: 2px;
+}
+
+/* Vertical toggle lines */
+.nav-toggle.vertical {
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 6px;
+}
+
+.nav-toggle-line {
+    width: 3px;
+    height: 8px;
+    background-color: white;
+    border-radius: 1.5px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center;
+}
+
+.nav-toggle.vertical.active .nav-toggle-line:nth-child(1) {
+    transform: rotate(45deg) translate(2px, 2px);
+    height: 12px;
+}
+
+.nav-toggle.vertical.active .nav-toggle-line:nth-child(2) {
+    opacity: 0;
+    transform: scale(0);
+}
+
+.nav-toggle.vertical.active .nav-toggle-line:nth-child(3) {
+    transform: rotate(-45deg) translate(2px, -2px);
+    height: 12px;
 }
 
 .nav-toggle i {
@@ -1027,6 +1068,10 @@ a:hover {
 
 [data-theme="dark"] .nav-toggle.active {
     background: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .nav-toggle-line {
+    background-color: #e0e0e0;
 }
 
 /* Accessibility improvements */

@@ -320,17 +320,26 @@ class DesktopNavManager {
 
     updateNavDisplay() {
         const icon = this.navToggle.querySelector('i');
+        const lines = this.navToggle.querySelectorAll('.nav-toggle-line');
         
         if (this.isCollapsed) {
             this.navMenu.classList.add('collapsed');
             this.navToggle.classList.add('active');
             this.navToggle.setAttribute('aria-expanded', 'false');
-            icon.className = 'fas fa-chevron-right';
+            
+            // Handle both old FontAwesome icons and new vertical lines
+            if (icon) {
+                icon.className = 'fas fa-chevron-right';
+            }
         } else {
             this.navMenu.classList.remove('collapsed');
             this.navToggle.classList.remove('active');
             this.navToggle.setAttribute('aria-expanded', 'true');
-            icon.className = 'fas fa-bars';
+            
+            // Handle both old FontAwesome icons and new vertical lines
+            if (icon) {
+                icon.className = 'fas fa-bars';
+            }
         }
     }
 
