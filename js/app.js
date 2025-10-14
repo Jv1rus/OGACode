@@ -13,7 +13,7 @@ class ThemeManager {
     setupEventListeners() {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
-            themeToggle.addEventListener('click', () => {
+            themeToggle.addEventListener('change', () => {
                 this.toggleTheme();
             });
         }
@@ -36,14 +36,15 @@ class ThemeManager {
 
     updateThemeIcon(theme) {
         const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            const icon = themeToggle.querySelector('i');
+        const themeToggleLabel = document.querySelector('.theme-toggle-switch');
+        
+        if (themeToggle && themeToggleLabel) {
             if (theme === 'dark') {
-                icon.className = 'fas fa-sun';
-                themeToggle.title = 'Switch to Light Mode';
+                themeToggle.checked = true;
+                themeToggleLabel.title = 'Switch to Light Mode';
             } else {
-                icon.className = 'fas fa-moon';
-                themeToggle.title = 'Switch to Dark Mode';
+                themeToggle.checked = false;
+                themeToggleLabel.title = 'Switch to Dark Mode';
             }
         }
     }
