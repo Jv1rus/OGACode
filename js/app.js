@@ -374,14 +374,137 @@ class OgaStockApp {
         this.themeManager = new ThemeManager();
         this.mobileMenuManager = new MobileMenuManager();
         this.desktopNavManager = new DesktopNavManager();
-        this.init();
+        this.isInitialized = false;
+        
+        // Wait for authentication before initializing
+        this.waitForAuth();
+    }
+
+    waitForAuth() {
+        // Check if user is authenticated before initializing
+        const checkAuth = () => {
+            if (window.authManager && window.authManager.getCurrentUser()) {
+                this.init();
+            } else if (window.authManager) {
+                // User not authenticated, auth manager will handle login screen
+                return;
+            } else {
+                // Auth manager not ready yet, wait a bit more
+                setTimeout(checkAuth, 100);
+            }
+        };
+        
+        checkAuth();
     }
 
     init() {
+        if (this.isInitialized) return;
+        
         this.setupEventListeners();
         this.setupOfflineDetection();
         this.loadInitialData();
         this.showSection('dashboard');
+        this.setupPermissions();
+        
+        this.isInitialized = true;
+    }
+
+    setupPermissions() {
+        if (!window.authManager) return;
+
+        const user = window.authManager.getCurrentUser();
+        if (!user) return;
+
+        // Hide/show navigation items based on permissions
+        this.updateNavigationPermissions(user);
+        
+        // Set up role-based restrictions
+        this.setupRoleRestrictions(user);
+    }
+
+    updateNavigationPermissions(user) {
+        const navLinks = document.querySelectorAll('.nav-link');
+        const permissions = user.permissions || [];
+        
+        navLinks.forEach(link => {
+            const section = link.dataset.section;
+            let hasAccess = false;
+            
+            // Check permissions
+            if (permissions.includes('all')) {
+                hasAccess = true;
+            } else {
+                switch (section) {
+                    case 'dashboard':
+                        hasAccess = true; // Everyone can see dashboard
+                        break;
+                    case 'products':
+                        hasAccess = permissions.includes('products') || permissions.includes('products:view');
+                        break;
+                    case 'orders':
+                        hasAccess = permissions.includes('orders');
+                        break;
+                    case 'sales':
+                        hasAccess = permissions.includes('sales');
+                        break;
+                    case 'reports':
+                        hasAccess = permissions.includes('reports');
+                        break;
+                }
+            }
+            
+            if (!hasAccess) {
+                link.style.display = 'none';
+            } else {
+                link.style.display = 'flex';
+            }
+        });
+    }
+
+    setupRoleRestrictions(user) {
+        const role = user.role;
+        
+        // Cashier restrictions
+        if (role === 'cashier') {
+            // Hide certain buttons in products section
+            this.hideCashierRestrictedElements();
+        }
+        
+        // Add role-specific styling
+        document.body.setAttribute('data-user-role', role);
+    }
+
+    hideCashierRestrictedElements() {
+        // This will be called when products section loads
+        // Implementation in products.js will check user role
+    }
+
+    hasAccessToSection(sectionName) {
+        if (!window.authManager) return true; // If no auth, allow access
+        
+        const user = window.authManager.getCurrentUser();
+        if (!user) return false;
+        
+        const permissions = user.permissions || [];
+        
+        // Admin has access to everything
+        if (permissions.includes('all')) return true;
+        
+        // Check specific section permissions
+        switch (sectionName) {
+            case 'dashboard':
+                return true; // Everyone can access dashboard
+            case 'products':
+                return permissions.includes('products') || permissions.includes('products:view');
+            case 'orders':
+                return permissions.includes('orders');
+            case 'sales':
+                return permissions.includes('sales');
+            case 'reports':
+                return permissions.includes('reports');
+            default:
+                return false;
+        }
     }
 
     setupEventListeners() {
@@ -450,6 +573,16 @@ class OgaStockApp {
     }
 
     showSection(sectionName) {
+        // Check permissions before showing section
+        if (!this.hasAccessToSection(sectionName)) {
+            if (typeof NotificationManager !== 'undefined') {
+                NotificationManager.show('You do not have permission to access this section.', 'error');
+            } else {
+                alert('You do not have permission to access this section.');
+            }
+            return;
+        }
+
         // Hide all sections
         document.querySelectorAll('.content-section').forEach(section => {
             section.classList.remove('active');
@@ -515,6 +648,14 @@ class OgaStockApp {
         // Load sample data if no data exists
         if (!StorageManager.hasData()) {
             this.loadSampleData();
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show(message, type);
+        } else {
+            console.log(`${type.toUpperCase()}: ${message}`);
         }
     }
 
@@ -701,11 +842,11 @@ class OgaStockApp {
             StorageManager.saveSale(sale);
         });
 
-        NotificationManager.show('Sample data loaded successfully!', 'success');
+        this.showNotification('Sample data loaded successfully!', 'success');
     }
 
     refreshAllData() {
-        NotificationManager.show('Refreshing data...', 'info');
+        this.showNotification('Refreshing data...', 'info');
         
         // Show loading spinner
         document.getElementById('loadingSpinner').style.display = 'flex';
@@ -713,17 +854,17 @@ class OgaStockApp {
         setTimeout(() => {
             this.loadSectionData(this.currentSection);
             document.getElementById('loadingSpinner').style.display = 'none';
-            NotificationManager.show('Data refreshed successfully!', 'success');
+            this.showNotification('Data refreshed successfully!', 'success');
         }, 1000);
     }
 
     syncOfflineData() {
         // Sync any offline changes when coming back online
         if (this.isOnline) {
-            NotificationManager.show('Syncing offline changes...', 'info');
+            this.showNotification('Syncing offline changes...', 'info');
             // Implementation for syncing offline data would go here
             setTimeout(() => {
-                NotificationManager.show('Data synced successfully!', 'success');
+                this.showNotification('Data synced successfully!', 'success');
             }, 2000);
         }
     }
@@ -805,7 +946,11 @@ class Utils {
 
     static exportToCSV(data, filename) {
         if (!data || data.length === 0) {
-            NotificationManager.show('No data to export', 'warning');
+            if (typeof NotificationManager !== 'undefined') {
+                NotificationManager.show('No data to export', 'warning');
+            } else {
+                alert('No data to export');
+            }
             return;
         }
 
@@ -830,7 +975,11 @@ class Utils {
         a.click();
         window.URL.revokeObjectURL(url);
         
-        NotificationManager.show('Data exported successfully!', 'success');
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show('Data exported successfully!', 'success');
+        } else {
+            console.log('Data exported successfully!');
+        }
     }
 
     static printReport(elementId) {

@@ -17,6 +17,7 @@
     
     <!-- CSS -->
     <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/auth.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/products.css">
     <link rel="stylesheet" href="css/orders.css">
@@ -27,57 +28,139 @@
      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu" aria-expanded="false">
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-                <span class="hamburger-line"></span>
-            </button>
-            <div class="nav-logo">
-                <i class="fas fa-store"></i>
-                <span>OgaStock</span>
-            </div>
-            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="true">
-                <i class="fas fa-bars"></i>
-            </button>
-            <div class="nav-menu" id="navMenu">
-                <a href="#dashboard" class="nav-link active" data-section="dashboard">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </a>
-                <a href="#products" class="nav-link" data-section="products">
-                    <i class="fas fa-box"></i> Products
-                </a>
-                <a href="#orders" class="nav-link" data-section="orders">
-                    <i class="fas fa-shopping-cart"></i> Orders
-                </a>
-                <a href="#sales" class="nav-link" data-section="sales">
-                    <i class="fas fa-cash-register"></i> Sales
-                </a>
-                <a href="#reports" class="nav-link" data-section="reports">
-                    <i class="fas fa-chart-bar"></i> Reports
-                </a>
-            </div>
-            <div class="nav-user">
-                <div class="theme-toggle-container">
-                    <label class="theme-toggle-switch" for="themeToggle" title="Toggle Dark/Light Mode">
-                        <input type="checkbox" id="themeToggle" class="theme-toggle-input">
-                        <span class="theme-toggle-slider">
-                            <i class="fas fa-sun theme-icon-light"></i>
-                            <i class="fas fa-moon theme-icon-dark"></i>
-                        </span>
-                    </label>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="fas fa-store"></i>
+                    <h1>OgaStock</h1>
                 </div>
-                <span class="online-status" id="onlineStatus">
-                    <i class="fas fa-circle"></i> <span>Online</span>
-                </span>
+                <p class="login-subtitle">Inventory Management System</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" name="username" required placeholder="Enter your username">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                        <button type="button" class="password-toggle" id="passwordToggle" title="Toggle password visibility" aria-label="Show/hide password">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="rememberMe">
+                        <span class="checkmark"></span>
+                        Remember me
+                    </label>
+                    <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
+                </div>
+                
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Sign In
+                </button>
+                
+                <div class="login-divider">
+                    <span>or</span>
+                </div>
+                
+                <button type="button" class="demo-btn" id="demoLogin">
+                    <i class="fas fa-play"></i>
+                    Try Demo Account
+                </button>
+            </form>
+            
+            <div class="login-footer">
+                <p>&copy; 2025 OgaStock. All rights reserved.</p>
+                <div class="login-links">
+                    <a href="#" id="createAccount">Create Account</a>
+                    <span>|</span>
+                    <a href="#" id="helpSupport">Help & Support</a>
+                </div>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
+    <!-- Main Application (hidden initially) -->
+    <div id="mainApp" class="main-app">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="nav-container">
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle mobile menu" aria-expanded="false">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+                <div class="nav-logo">
+                    <i class="fas fa-store"></i>
+                    <span>OgaStock</span>
+                </div>
+                <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="true">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="nav-menu" id="navMenu">
+                    <a href="#dashboard" class="nav-link active" data-section="dashboard">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="#products" class="nav-link" data-section="products">
+                        <i class="fas fa-box"></i> Products
+                    </a>
+                    <a href="#orders" class="nav-link" data-section="orders">
+                        <i class="fas fa-shopping-cart"></i> Orders
+                    </a>
+                    <a href="#sales" class="nav-link" data-section="sales">
+                        <i class="fas fa-cash-register"></i> Sales
+                    </a>
+                    <a href="#reports" class="nav-link" data-section="reports">
+                        <i class="fas fa-chart-bar"></i> Reports
+                    </a>
+                </div>
+                <div class="nav-user">
+                    <div class="user-profile" id="userProfile">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name" id="userName">Admin User</span>
+                            <span class="user-role" id="userRole">Administrator</span>
+                        </div>
+                        <div class="user-dropdown" id="userDropdown">
+                            <a href="#" id="userSettings"><i class="fas fa-cog"></i> Settings</a>
+                            <a href="#" id="userProfileLink"><i class="fas fa-user"></i> Profile</a>
+                            <a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        </div>
+                    </div>
+                    <div class="theme-toggle-container">
+                        <label class="theme-toggle-switch" for="themeToggle" title="Toggle Dark/Light Mode">
+                            <input type="checkbox" id="themeToggle" class="theme-toggle-input">
+                            <span class="theme-toggle-slider">
+                                <i class="fas fa-sun theme-icon-light"></i>
+                                <i class="fas fa-moon theme-icon-dark"></i>
+                            </span>
+                        </label>
+                    </div>
+                    <span class="online-status" id="onlineStatus">
+                        <i class="fas fa-circle"></i> <span>Online</span>
+                    </span>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
         <!-- Dashboard Section -->
         <section id="dashboard" class="content-section active">
             <div class="section-header">
@@ -579,9 +662,12 @@
     <!-- Toast Notifications -->
     <div id="toastContainer" class="toast-container"></div>
 
+    </div> <!-- End mainApp -->
+
     <!-- JavaScript -->
-    <script src="js/app.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
     <script src="js/dashboard.js"></script>
     <script src="js/products.js"></script>
     <script src="js/orders.js"></script>
