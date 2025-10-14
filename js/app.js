@@ -12,11 +12,67 @@ class ThemeManager {
 
     setupEventListeners() {
         const themeToggle = document.getElementById('themeToggle');
+        const themeToggleSwitch = document.querySelector('.theme-toggle-switch');
+        
         if (themeToggle) {
-            themeToggle.addEventListener('change', () => {
-                this.toggleTheme();
+            // Enhanced change event with animation feedback
+            themeToggle.addEventListener('change', (e) => {
+                this.handleThemeToggle(e);
             });
+            
+            // Add tactile feedback on interaction
+            if (themeToggleSwitch) {
+                themeToggleSwitch.addEventListener('mousedown', () => {
+                    this.addActiveState();
+                });
+                
+                themeToggleSwitch.addEventListener('mouseup', () => {
+                    this.removeActiveState();
+                });
+                
+                themeToggleSwitch.addEventListener('mouseleave', () => {
+                    this.removeActiveState();
+                });
+                
+                // Touch support for mobile
+                themeToggleSwitch.addEventListener('touchstart', () => {
+                    this.addActiveState();
+                });
+                
+                themeToggleSwitch.addEventListener('touchend', () => {
+                    this.removeActiveState();
+                });
+            }
         }
+    }
+
+    addActiveState() {
+        const slider = document.querySelector('.theme-toggle-slider');
+        if (slider) {
+            slider.style.transform = 'translateY(1px) scale(0.98)';
+            slider.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.2)';
+        }
+    }
+
+    removeActiveState() {
+        const slider = document.querySelector('.theme-toggle-slider');
+        if (slider) {
+            slider.style.transform = '';
+            slider.style.boxShadow = '';
+        }
+    }
+
+    handleThemeToggle(event) {
+        // Add small delay for visual feedback
+        const slider = document.querySelector('.theme-toggle-slider');
+        if (slider) {
+            slider.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+        }
+        
+        // Small delay to show the animation
+        setTimeout(() => {
+            this.toggleTheme();
+        }, 50);
     }
 
     getStoredTheme() {
@@ -42,103 +98,65 @@ class ThemeManager {
             if (theme === 'dark') {
                 themeToggle.checked = true;
                 themeToggleLabel.title = 'Switch to Light Mode';
+                themeToggleLabel.setAttribute('aria-label', 'Switch to Light Mode');
             } else {
                 themeToggle.checked = false;
                 themeToggleLabel.title = 'Switch to Dark Mode';
+                themeToggleLabel.setAttribute('aria-label', 'Switch to Dark Mode');
             }
         }
     }
 
     toggleTheme() {
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        
+        // Add smooth transition animation
+        this.addThemeTransition();
+        
         this.applyTheme(newTheme);
         
-        // Show notification
-        NotificationManager.show(
-            `Switched to ${newTheme} mode`, 
-            'success'
-        );
+        // Enhanced notification with theme-specific styling
+        const notification = `
+            <i class="fas fa-${newTheme === 'dark' ? 'moon' : 'sun'}"></i> 
+            Switched to ${newTheme} mode
+        `;
+        
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show(notification, 'success');
+        }
+        
+        // Add a subtle haptic feedback simulation
+        this.simulateHapticFeedback();
+    }
+
+    addThemeTransition() {
+        // Add a smooth transition overlay
+        const body = document.body;
+        body.style.transition = 'all 0.3s ease';
+        
+        // Remove transition after animation
+        setTimeout(() => {
+            body.style.transition = '';
+        }, 300);
+    }
+
+    simulateHapticFeedback() {
+        // Visual feedback simulation for web
+        const slider = document.querySelector('.theme-toggle-slider:before');
+        if (slider) {
+            // Create a subtle bounce effect
+            const toggle = document.querySelector('.theme-toggle-slider');
+            if (toggle) {
+                toggle.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    toggle.style.transform = '';
+                }, 150);
+            }
+        }
     }
 
     isDarkMode() {
         return this.currentTheme === 'dark';
-    }
-}
-
-// Mobile Menu Management
-class MobileMenuManager {
-    constructor() {
-        this.mobileMenuToggle = document.getElementById('mobileMenuToggle');
-        this.navMenu = document.getElementById('navMenu');
-        this.navLinks = document.querySelectorAll('.nav-link');
-        this.isMenuOpen = false;
-        
-        this.initializeEventListeners();
-    }
-
-    initializeEventListeners() {
-        // Mobile menu toggle
-        this.mobileMenuToggle?.addEventListener('click', () => {
-            this.toggleMobileMenu();
-        });
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
-            if (this.isMenuOpen && 
-                !this.navMenu.contains(e.target) && 
-                !this.mobileMenuToggle.contains(e.target)) {
-                this.closeMobileMenu();
-            }
-        });
-
-        // Close menu when clicking on nav links
-        this.navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                this.closeMobileMenu();
-            });
-        });
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            if (window.innerWidth > 768 && this.isMenuOpen) {
-                this.closeMobileMenu();
-            }
-        });
-
-        // Handle escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.isMenuOpen) {
-                this.closeMobileMenu();
-            }
-        });
-    }
-
-    toggleMobileMenu() {
-        if (this.isMenuOpen) {
-            this.closeMobileMenu();
-        } else {
-            this.openMobileMenu();
-        }
-    }
-
-    openMobileMenu() {
-        this.navMenu.classList.add('active');
-        this.mobileMenuToggle.innerHTML = '<i class="fas fa-times"></i>';
-        this.mobileMenuToggle.setAttribute('aria-expanded', 'true');
-        this.isMenuOpen = true;
-        
-        // Prevent body scrolling when menu is open
-        document.body.style.overflow = 'hidden';
-    }
-
-    closeMobileMenu() {
-        this.navMenu.classList.remove('active');
-        this.mobileMenuToggle.innerHTML = '<i class="fas fa-bars"></i>';
-        this.mobileMenuToggle.setAttribute('aria-expanded', 'false');
-        this.isMenuOpen = false;
-        
-        // Restore body scrolling
-        document.body.style.overflow = '';
     }
 }
 
@@ -148,7 +166,6 @@ class OgaStockApp {
         this.currentSection = 'dashboard';
         this.isOnline = navigator.onLine;
         this.themeManager = new ThemeManager();
-        this.mobileMenuManager = new MobileMenuManager();
         this.init();
     }
 
