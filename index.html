@@ -41,10 +41,10 @@
             
             <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="emailOrUsername">Email or Username</label>
                     <div class="input-group">
-                        <i class="fas fa-user"></i>
-                        <input type="text" id="username" name="username" required placeholder="Enter your username">
+                        <i class="fas fa-at" id="loginIcon"></i>
+                        <input type="text" id="emailOrUsername" name="emailOrUsername" required placeholder="Enter your email or username" autocomplete="username">
                     </div>
                 </div>
                 
@@ -52,7 +52,7 @@
                     <label for="password">Password</label>
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" name="password" required placeholder="Enter your password">
+                        <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="current-password">
                         <button type="button" class="password-toggle" id="passwordToggle" title="Toggle password visibility" aria-label="Show/hide password">
                             <i class="fas fa-eye"></i>
                         </button>

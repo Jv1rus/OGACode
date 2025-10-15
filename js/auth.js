@@ -27,6 +27,14 @@ class AuthManager {
             });
         }
 
+        // Email/Username input validation
+        const emailOrUsernameInput = document.getElementById('emailOrUsername');
+        if (emailOrUsernameInput) {
+            emailOrUsernameInput.addEventListener('input', (e) => {
+                this.validateEmailOrUsername(e.target);
+            });
+        }
+
         // Password toggle
         const passwordToggle = document.getElementById('passwordToggle');
         if (passwordToggle) {
@@ -52,21 +60,21 @@ class AuthManager {
             });
         }
 
-        // Account creation (placeholder)
+        // Account creation
         const createAccountBtn = document.getElementById('createAccount');
         if (createAccountBtn) {
             createAccountBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showCreateAccount();
+                this.showCreateAccountModal();
             });
         }
 
-        // Forgot password (placeholder)
+        // Forgot password
         const forgotPasswordBtn = document.getElementById('forgotPassword');
         if (forgotPasswordBtn) {
             forgotPasswordBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                this.showForgotPassword();
+                this.showForgotPasswordModal();
             });
         }
     }
@@ -84,7 +92,8 @@ class AuthManager {
                 email: 'admin@ogastock.com',
                 avatar: null,
                 createdAt: new Date().toISOString(),
-                lastLogin: null
+                lastLogin: null,
+                emailVerified: true
             },
             {
                 id: 'manager',
@@ -96,7 +105,8 @@ class AuthManager {
                 email: 'manager@ogastock.com',
                 avatar: null,
                 createdAt: new Date().toISOString(),
-                lastLogin: null
+                lastLogin: null,
+                emailVerified: true
             },
             {
                 id: 'cashier',
@@ -108,7 +118,8 @@ class AuthManager {
                 email: 'cashier@ogastock.com',
                 avatar: null,
                 createdAt: new Date().toISOString(),
-                lastLogin: null
+                lastLogin: null,
+                emailVerified: true
             },
             {
                 id: 'demo',
@@ -120,7 +131,8 @@ class AuthManager {
                 email: 'demo@ogastock.com',
                 avatar: null,
                 createdAt: new Date().toISOString(),
-                lastLogin: null
+                lastLogin: null,
+                emailVerified: true
             }
         ];
 
@@ -128,7 +140,14 @@ class AuthManager {
         const storedUsers = localStorage.getItem('ogastock-users');
         if (storedUsers) {
             try {
-                return JSON.parse(storedUsers);
+                const parsedUsers = JSON.parse(storedUsers);
+                // Ensure all users have email verification status
+                parsedUsers.forEach(user => {
+                    if (user.emailVerified === undefined) {
+                        user.emailVerified = true; // Default existing users to verified
+                    }
+                });
+                return parsedUsers;
             } catch (e) {
                 console.warn('Failed to parse stored users, using defaults');
             }
@@ -172,12 +191,18 @@ class AuthManager {
     }
 
     handleLogin() {
-        const username = document.getElementById('username').value.trim();
+        const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
         const password = document.getElementById('password').value;
         const rememberMe = document.getElementById('rememberMe').checked;
 
-        if (!username || !password) {
-            this.showError('Please enter both username and password');
+        if (!emailOrUsername || !password) {
+            this.showError('Please enter both email/username and password');
+            return;
+        }
+
+        // Validate email format if it looks like an email
+        if (this.isEmail(emailOrUsername) && !this.isValidEmail(emailOrUsername)) {
+            this.showError('Please enter a valid email address');
             return;
         }
 
@@ -192,7 +217,7 @@ class AuthManager {
 
         // Simulate API delay for better UX
         setTimeout(() => {
-            const user = this.authenticateUser(username, password);
+            const user = this.authenticateUser(emailOrUsername, password);
             
             if (user) {
                 this.loginSuccess(user, rememberMe);
@@ -204,11 +229,46 @@ class AuthManager {
         }, 1000);
     }
 
-    authenticateUser(username, password) {
-        const user = this.users.find(u => 
-            u.username.toLowerCase() === username.toLowerCase() && 
-            u.password === password
-        );
+    isEmail(input) {
+        return input.includes('@');
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    validateEmailOrUsername(input) {
+        const icon = document.getElementById('loginIcon');
+        const inputValue = input.value.trim();
+        
+        // Change icon based on input type
+        if (this.isEmail(inputValue)) {
+            icon.className = 'fas fa-at';
+            
+            // Validate email format
+            if (inputValue && !this.isValidEmail(inputValue)) {
+                input.setCustomValidity('Please enter a valid email address');
+                input.style.borderColor = '#dc3545';
+            } else {
+                input.setCustomValidity('');
+                input.style.borderColor = '';
+            }
+        } else {
+            icon.className = 'fas fa-user';
+            input.setCustomValidity('');
+            input.style.borderColor = '';
+        }
+    }
+
+    authenticateUser(emailOrUsername, password) {
+        const user = this.users.find(u => {
+            const matchesUsername = u.username.toLowerCase() === emailOrUsername.toLowerCase();
+            const matchesEmail = u.email && u.email.toLowerCase() === emailOrUsername.toLowerCase();
+            const matchesPassword = u.password === password;
+            
+            return (matchesUsername || matchesEmail) && matchesPassword;
+        });
 
         if (user) {
             // Update last login
@@ -218,6 +278,7 @@ class AuthManager {
             // Reset login attempts on success
             this.loginAttempts = 0;
             localStorage.removeItem('ogastock-lockout');
+            localStorage.removeItem('ogastock-login-attempts');
             
             return user;
         }
@@ -264,6 +325,15 @@ class AuthManager {
         
         // Clear password field
         document.getElementById('password').value = '';
+        
+        // Reset input validation styles
+        const emailOrUsernameInput = document.getElementById('emailOrUsername');
+        if (emailOrUsernameInput) {
+            emailOrUsernameInput.style.borderColor = '#dc3545';
+            setTimeout(() => {
+                emailOrUsernameInput.style.borderColor = '';
+            }, 3000);
+        }
     }
 
     isLockedOut() {
@@ -285,8 +355,17 @@ class AuthManager {
     loginDemo() {
         const demoUser = this.users.find(u => u.username === 'demo');
         if (demoUser) {
+            // Fill in the demo credentials in the form
+            const emailOrUsernameInput = document.getElementById('emailOrUsername');
+            const passwordInput = document.getElementById('password');
+            
+            if (emailOrUsernameInput) emailOrUsernameInput.value = 'demo';
+            if (passwordInput) passwordInput.value = 'demo';
+            
             this.loginSuccess(demoUser, false);
             this.showInfo('Demo mode activated! All features are available for testing.');
+        } else {
+            this.showError('Demo account not available');
         }
     }
 
@@ -302,6 +381,12 @@ class AuthManager {
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.reset();
+        }
+        
+        // Reset input styles
+        const emailOrUsernameInput = document.getElementById('emailOrUsername');
+        if (emailOrUsernameInput) {
+            emailOrUsernameInput.style.borderColor = '';
         }
         
         // Show login screen
@@ -473,13 +558,223 @@ class AuthManager {
         return newUser;
     }
 
-    // Placeholder methods for future features
+    // Enhanced user management and password recovery
+    showForgotPasswordModal() {
+        const modal = this.createModal('Password Reset', `
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="resetEmail">Email Address</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="resetEmail" required placeholder="Enter your email address">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Send Reset Link</button>
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                </div>
+            </form>
+        `);
+
+        document.body.appendChild(modal);
+
+        // Handle form submission
+        const form = modal.querySelector('#forgotPasswordForm');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handlePasswordReset(form);
+        });
+    }
+
+    showCreateAccountModal() {
+        const modal = this.createModal('Create Account', `
+            <form id="createAccountForm">
+                <div class="form-group">
+                    <label for="newFullName">Full Name</label>
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="newFullName" required placeholder="Enter your full name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newEmail">Email Address</label>
+                    <div class="input-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="newEmail" required placeholder="Enter your email address">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newUsername">Username</label>
+                    <div class="input-group">
+                        <i class="fas fa-user-circle"></i>
+                        <input type="text" id="newUsername" required placeholder="Choose a username">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="newPassword" required placeholder="Create a password">
+                        <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                    <small class="form-text">Password must be at least 6 characters long</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Create Account</button>
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+                </div>
+            </form>
+        `);
+
+        document.body.appendChild(modal);
+
+        // Handle form submission
+        const form = modal.querySelector('#createAccountForm');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.handleAccountCreation(form);
+        });
+    }
+
+    createModal(title, content) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>${title}</h3>
+                    <button type="button" class="modal-close" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    ${content}
+                </div>
+            </div>
+        `;
+
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.remove();
+            }
+        });
+
+        return modal;
+    }
+
+    handlePasswordReset(form) {
+        const email = form.querySelector('#resetEmail').value.trim();
+        
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email address');
+            return;
+        }
+
+        const user = this.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        
+        if (user) {
+            // In a real application, this would send an email
+            // For demo purposes, we'll generate a temporary password
+            const tempPassword = this.generateTemporaryPassword();
+            user.password = tempPassword;
+            user.resetRequired = true;
+            this.saveUsers(this.users);
+            
+            this.showSuccess(`Password reset successful! Your temporary password is: ${tempPassword}\nPlease change it after logging in.`);
+            form.closest('.modal').remove();
+        } else {
+            this.showError('No account found with that email address');
+        }
+    }
+
+    handleAccountCreation(form) {
+        const formData = new FormData(form);
+        const name = form.querySelector('#newFullName').value.trim();
+        const email = form.querySelector('#newEmail').value.trim();
+        const username = form.querySelector('#newUsername').value.trim();
+        const password = form.querySelector('#newPassword').value;
+        const confirmPassword = form.querySelector('#confirmPassword').value;
+
+        // Validation
+        if (!name || !email || !username || !password || !confirmPassword) {
+            this.showError('Please fill in all fields');
+            return;
+        }
+
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email address');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showError('Password must be at least 6 characters long');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            this.showError('Passwords do not match');
+            return;
+        }
+
+        // Check if username or email already exists
+        const existingUser = this.users.find(u => 
+            u.username.toLowerCase() === username.toLowerCase() || 
+            (u.email && u.email.toLowerCase() === email.toLowerCase())
+        );
+
+        if (existingUser) {
+            this.showError('Username or email already exists');
+            return;
+        }
+
+        // Create new user
+        const newUser = {
+            id: `user_${Date.now()}`,
+            username: username,
+            password: password, // In production, this would be hashed
+            name: name,
+            role: 'cashier', // Default role for new accounts
+            permissions: ['sales', 'products:view'],
+            email: email,
+            avatar: null,
+            createdAt: new Date().toISOString(),
+            lastLogin: null,
+            emailVerified: false // In production, would require email verification
+        };
+
+        this.users.push(newUser);
+        this.saveUsers(this.users);
+
+        this.showSuccess('Account created successfully! You can now log in.');
+        form.closest('.modal').remove();
+    }
+
+    generateTemporaryPassword() {
+        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+        let password = '';
+        for (let i = 0; i < 8; i++) {
+            password += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return password;
+    }
+
+    // Legacy placeholder methods (keeping for compatibility)
     showCreateAccount() {
-        this.showInfo('Account creation feature coming soon! Please contact your administrator.');
+        this.showCreateAccountModal();
     }
 
     showForgotPassword() {
-        this.showInfo('Password reset feature coming soon! Please contact your administrator.');
+        this.showForgotPasswordModal();
     }
 
     // Get current user info

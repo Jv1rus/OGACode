@@ -588,3 +588,154 @@
         font-size: 0.95rem;
     }
 }
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.3s ease;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #666;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.modal .form-group {
+    margin-bottom: 20px;
+}
+
+.modal .form-text {
+    display: block;
+    margin-top: 6px;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.modal .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.modal .btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.modal .btn-primary:hover {
+    background: #0056b3;
+}
+
+.modal .btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.modal .btn-secondary:hover {
+    background: #545b62;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Dark theme modal styles */
+[data-theme="dark"] .modal-content {
+    background: #2d2d2d;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .modal-header {
+    border-bottom-color: #444;
+}
+
+[data-theme="dark"] .modal-header h3 {
+    color: #ffffff;
+}
+
+[data-theme="dark"] .modal-close {
+    color: #cccccc;
+}
+
+[data-theme="dark"] .modal-close:hover {
+    background: #444;
+    color: #ffffff;
+}
+
+[data-theme="dark"] .modal-actions {
+    border-top-color: #444;
+}
+
+[data-theme="dark"] .modal .form-text {
+    color: #cccccc;
+}
