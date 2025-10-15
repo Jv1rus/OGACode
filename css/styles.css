@@ -1,6 +1,7 @@
 /* Enhanced Responsive Typography */
 html {
     font-size: 16px; /* Base font size */
+    scroll-behavior: smooth; /* Smooth scrolling */
 }
 
 /* Reset and Base Styles */
@@ -16,8 +17,8 @@ body {
     color: var(--text-color, #333);
     line-height: 1.6;
     font-size: 1rem; /* 16px base */
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
 /* Responsive Font Scaling */
@@ -36,6 +37,19 @@ body {
 @media (max-width: 320px) {
     html {
         font-size: 13px; /* Even smaller on very small screens */
+    }
+    
+    /* Optimize for very small screens */
+    .main-content {
+        padding: 10px;
+        margin-top: 70px;
+        min-height: calc(100vh - 70px);
+    }
+    
+    /* Ensure proper scrolling on very small screens */
+    body {
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -750,6 +764,8 @@ a:hover {
     .main-content {
         margin-top: 80px; /* Increased to accommodate taller mobile nav */
         padding: 15px;
+        min-height: calc(100vh - 80px); /* Adjust for mobile nav height */
+        padding-bottom: 30px; /* Extra padding for mobile */
     }
 
     /* Section headers mobile layout */
@@ -1033,6 +1049,47 @@ a:hover {
     }
 }
 
+/* Mobile scrolling optimizations */
+@media (max-width: 768px) {
+    body {
+        /* Ensure smooth scrolling on mobile */
+        -webkit-overflow-scrolling: touch;
+        overflow-x: hidden;
+    }
+    
+    /* Optimize content sections for mobile scrolling */
+    .content-section {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    /* Ensure tables scroll horizontally on mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -15px;
+        padding: 0 15px;
+    }
+    
+    /* Improve form interaction on mobile */
+    input, textarea, select {
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 6px;
+    }
+    
+    /* Prevent zoom on input focus for iOS */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="tel"],
+    textarea,
+    select {
+        font-size: 16px; /* Prevents zoom on iOS */
+    }
+}
+
 /* Focus styles for mobile navigation */
 @media (max-width: 768px) {
     .nav-link:focus {
@@ -1120,9 +1177,8 @@ a:hover {
     max-width: 1200px;
     margin-left: auto;
     margin-right: auto;
-    min-height: calc(100vh - 60px);
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    min-height: calc(100vh - 60px); /* Ensure content area fills remaining height */
+    padding-bottom: 40px; /* Extra padding at bottom */
 }
 
 .content-section {
