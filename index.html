@@ -35,7 +35,21 @@
 <body>
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
-        <div class="login-container">
+        <!-- Firebase Loading Screen -->
+        <div id="firebaseLoading" class="firebase-loading">
+            <div class="loading-content">
+                <div class="loading-logo">
+                    <i class="fas fa-store"></i>
+                    <h2>OgaStock</h2>
+                </div>
+                <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                </div>
+                <p>Connecting to Firebase...</p>
+            </div>
+        </div>
+        
+        <div class="login-container" id="loginContainer" style="display: none;">
             <div class="login-header">
                 <div class="login-logo">
                     <i class="fas fa-store"></i>
@@ -81,6 +95,11 @@
                 <div class="login-divider">
                     <span>or</span>
                 </div>
+                
+                <button type="button" class="google-btn" id="googleLogin">
+                    <i class="fab fa-google"></i>
+                    Sign in with Google
+                </button>
                 
                 <button type="button" class="demo-btn" id="demoLogin">
                     <i class="fas fa-play"></i>

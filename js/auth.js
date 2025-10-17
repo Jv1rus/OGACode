@@ -12,13 +12,35 @@ class FirebaseAuthManager {
     }
 
     async waitForFirebase() {
+        // Show loading screen
+        this.showFirebaseLoading();
+        
         // Wait for Firebase to be available
         while (!window.firebaseAuth || !window.firebaseDb) {
             await new Promise(resolve => setTimeout(resolve, 100));
         }
         this.auth = window.firebaseAuth;
         this.db = window.firebaseDb;
+        
+        // Hide loading screen
+        this.hideFirebaseLoading();
         console.log('Firebase services connected');
+    }
+
+    showFirebaseLoading() {
+        const loadingScreen = document.getElementById('firebaseLoading');
+        const loginContainer = document.getElementById('loginContainer');
+        
+        if (loadingScreen) loadingScreen.style.display = 'flex';
+        if (loginContainer) loginContainer.style.display = 'none';
+    }
+
+    hideFirebaseLoading() {
+        const loadingScreen = document.getElementById('firebaseLoading');
+        const loginContainer = document.getElementById('loginContainer');
+        
+        if (loadingScreen) loadingScreen.style.display = 'none';
+        if (loginContainer) loginContainer.style.display = 'block';
     }
 
     init() {
@@ -135,6 +157,14 @@ class FirebaseAuthManager {
             });
         }
 
+        // Google Sign-In
+        const googleBtn = document.getElementById('googleLogin');
+        if (googleBtn) {
+            googleBtn.addEventListener('click', () => {
+                this.signInWithGoogle();
+            });
+        }
+
         // Logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -167,6 +197,7 @@ class FirebaseAuthManager {
     async handleLogin() {
         const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
         const password = document.getElementById('password').value;
+        const rememberMe = document.getElementById('rememberMe').checked;
 
         if (!emailOrUsername || !password) {
             this.showError('Please enter both email and password');
@@ -179,14 +210,30 @@ class FirebaseAuthManager {
             return;
         }
 
-        // Firebase automatically handles rate limiting
+        // Set Firebase Auth persistence based on remember me
+        const persistence = rememberMe ? 
+            firebase.auth.Auth.Persistence.LOCAL : 
+            firebase.auth.Auth.Persistence.SESSION;
+        
+        try {
+            await this.auth.setPersistence(persistence);
+        } catch (error) {
+            console.warn('Could not set auth persistence:', error);
+        }
 
         const loginBtn = document.querySelector('.login-btn');
         this.setLoading(loginBtn, true);
 
         try {
             // Sign in with Firebase Auth
-            await this.auth.signInWithEmailAndPassword(emailOrUsername, password);
+            const userCredential = await this.auth.signInWithEmailAndPassword(emailOrUsername, password);
+            const user = userCredential.user;
+            
+            // Check if email is verified
+            if (!user.emailVerified) {
+                this.showEmailVerificationPrompt(user);
+                return;
+            }
             
             // Update last login in Firestore
             if (this.currentUser) {
@@ -195,15 +242,54 @@ class FirebaseAuthManager {
                 });
             }
 
-            // Login successful
-            
-            this.showSuccess('Login successful!');
+            this.showSuccess('Login successful! Welcome back.');
             
         } catch (error) {
             this.handleLoginError(error);
         } finally {
             this.setLoading(loginBtn, false);
         }
+    }
+
+    showEmailVerificationPrompt(user) {
+        const modal = this.createModal('Email Verification Required', `
+            <div class="verification-prompt">
+                <div class="verification-icon">
+                    <i class="fas fa-envelope-open-text"></i>
+                </div>
+                <p>Your email address <strong>${user.email}</strong> needs to be verified before you can access your account.</p>
+                <p>Please check your email and click the verification link, or request a new verification email.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-primary" id="resendVerification">
+                        <i class="fas fa-paper-plane"></i> Resend Verification Email
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                        <i class="fas fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        `);
+
+        document.body.appendChild(modal);
+
+        // Handle resend verification
+        const resendBtn = modal.querySelector('#resendVerification');
+        resendBtn.addEventListener('click', async () => {
+            try {
+                this.setLoading(resendBtn, true);
+                await user.sendEmailVerification();
+                this.showSuccess('Verification email sent! Please check your inbox.');
+                modal.remove();
+            } catch (error) {
+                console.error('Error sending verification email:', error);
+                this.showError('Failed to send verification email. Please try again.');
+            } finally {
+                this.setLoading(resendBtn, false);
+            }
+        });
+
+        // Sign out the unverified user
+        this.auth.signOut();
     }
 
     handleLoginError(error) {
@@ -607,6 +693,65 @@ class FirebaseAuthManager {
             this.showError(errorMessage);
         } finally {
             this.setLoading(submitBtn, false);
+        }
+    }
+
+    async signInWithGoogle() {
+        try {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.addScope('email');
+            provider.addScope('profile');
+            
+            const result = await this.auth.signInWithPopup(provider);
+            const user = result.user;
+            
+            // Check if this is a new user
+            const userDoc = await this.db.collection('users').doc(user.uid).get();
+            
+            if (!userDoc.exists) {
+                // Create user profile for new Google user
+                await this.db.collection('users').doc(user.uid).set({
+                    name: user.displayName,
+                    email: user.email,
+                    role: 'cashier', // Default role
+                    permissions: ['sales', 'products:view'],
+                    avatar: user.photoURL,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    emailVerified: user.emailVerified,
+                    provider: 'google'
+                });
+                
+                this.showSuccess('Google account linked successfully! Welcome to OgaStock.');
+            } else {
+                // Update last login for existing user
+                await this.db.collection('users').doc(user.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                this.showSuccess('Welcome back! Signed in with Google.');
+            }
+            
+        } catch (error) {
+            console.error('Google Sign-In error:', error);
+            
+            let errorMessage = 'Google Sign-In failed. Please try again.';
+            
+            switch (error.code) {
+                case 'auth/popup-closed-by-user':
+                    errorMessage = 'Sign-in was cancelled.';
+                    break;
+                case 'auth/popup-blocked':
+                    errorMessage = 'Popup was blocked by browser. Please allow popups and try again.';
+                    break;
+                case 'auth/network-request-failed':
+                    errorMessage = 'Network error. Please check your internet connection.';
+                    break;
+                default:
+                    errorMessage = error.message || 'Google Sign-In failed. Please try again.';
+            }
+            
+            this.showError(errorMessage);
         }
     }
 

@@ -17,6 +17,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Configure auth settings for better user experience
+auth.useDeviceLanguage(); // Use device language for Firebase Auth UI
+
 // Make Firebase services globally available
 window.firebaseAuth = auth;
 window.firebaseDb = db;
@@ -32,4 +35,52 @@ db.enablePersistence({
     }
 });
 
+// Connection state monitoring
+let isConnected = true;
+
+// Monitor authentication state
+auth.onAuthStateChanged((user) => {
+    if (user) {
+        console.log('User is signed in:', user.email);
+    } else {
+        console.log('User is signed out');
+    }
+});
+
+// Monitor Firestore connection state
+db.enableNetwork().then(() => {
+    console.log('Firestore online');
+    isConnected = true;
+    updateConnectionStatus(true);
+}).catch((error) => {
+    console.error('Firestore connection error:', error);
+    isConnected = false;
+    updateConnectionStatus(false);
+});
+
+// Function to update connection status in UI
+function updateConnectionStatus(online) {
+    const statusElement = document.getElementById('onlineStatus');
+    if (statusElement) {
+        const icon = statusElement.querySelector('i');
+        const text = statusElement.querySelector('span');
+        
+        if (online) {
+            icon.className = 'fas fa-circle';
+            icon.style.color = '#4caf50';
+            text.textContent = 'Online';
+        } else {
+            icon.className = 'fas fa-circle';
+            icon.style.color = '#f44336';
+            text.textContent = 'Offline';
+        }
+    }
+}
+
+// Export for use in other modules
+window.updateConnectionStatus = updateConnectionStatus;
+
 console.log('Firebase initialized successfully');
+console.log('🔥 Firebase Authentication ready');
+console.log('📊 Firestore database ready');
+console.log('🌐 Offline support enabled');
