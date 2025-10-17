@@ -149,6 +149,7 @@ class FirebaseAuthManager {
         if (createAccountBtn) {
             createAccountBtn.addEventListener('click', (e) => {
                 e.preventDefault();
+                console.log('Create Account button clicked');
                 this.showCreateAccountModal();
             });
         }
@@ -384,6 +385,14 @@ class FirebaseAuthManager {
     }
 
     async showCreateAccountModal() {
+        console.log('Showing Create Account modal');
+        
+        // Check if Firebase is initialized
+        if (!this.auth || !this.db) {
+            this.showError('Authentication system is still initializing. Please wait a moment and try again.');
+            return;
+        }
+        
         const modal = this.createModal('Create Account', `
             <form id="createAccountForm">
                 <div class="form-group">
@@ -404,7 +413,7 @@ class FirebaseAuthManager {
                     <label for="newPassword">Password</label>
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="newPassword" required placeholder="Create a password">
+                        <input type="password" id="newPassword" required placeholder="Create a password" minlength="6">
                         <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
                             <i class="fas fa-eye"></i>
                         </button>
@@ -415,8 +424,19 @@ class FirebaseAuthManager {
                     <label for="confirmPassword">Confirm Password</label>
                     <div class="input-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                        <input type="password" id="confirmPassword" required placeholder="Confirm your password" minlength="6">
+                        <button type="button" class="password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
+                    <small class="form-text" id="passwordMatch" style="color: #dc3545; display: none;">Passwords do not match</small>
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-container">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span class="checkmark"></span>
+                        I agree to the Terms of Service and Privacy Policy
+                    </label>
                 </div>
                 <div class="modal-actions">
                     <button type="submit" class="btn btn-primary">Create Account</button>
@@ -429,6 +449,25 @@ class FirebaseAuthManager {
 
         // Handle form submission
         const form = modal.querySelector('#createAccountForm');
+        
+        // Add real-time password validation
+        const newPassword = form.querySelector('#newPassword');
+        const confirmPassword = form.querySelector('#confirmPassword');
+        const passwordMatch = form.querySelector('#passwordMatch');
+        
+        const validatePasswords = () => {
+            if (confirmPassword.value && newPassword.value !== confirmPassword.value) {
+                passwordMatch.style.display = 'block';
+                confirmPassword.setCustomValidity('Passwords do not match');
+            } else {
+                passwordMatch.style.display = 'none';
+                confirmPassword.setCustomValidity('');
+            }
+        };
+        
+        newPassword.addEventListener('input', validatePasswords);
+        confirmPassword.addEventListener('input', validatePasswords);
+        
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             this.handleAccountCreation(form);
@@ -479,10 +518,16 @@ class FirebaseAuthManager {
         const email = form.querySelector('#newEmail').value.trim();
         const password = form.querySelector('#newPassword').value;
         const confirmPassword = form.querySelector('#confirmPassword').value;
+        const agreeTerms = form.querySelector('#agreeTerms').checked;
 
         // Validation
         if (!name || !email || !password || !confirmPassword) {
             this.showError('Please fill in all fields');
+            return;
+        }
+
+        if (!agreeTerms) {
+            this.showError('You must agree to the Terms of Service and Privacy Policy');
             return;
         }
 
@@ -529,8 +574,14 @@ class FirebaseAuthManager {
                 emailVerified: false
             });
 
-            this.showSuccess('Account created successfully! Please check your email to verify your account.');
+            this.showSuccess('Account created successfully! Please check your email to verify your account before logging in.');
             form.closest('.modal').remove();
+            
+            // Optionally fill the login form with the new email
+            const loginEmailInput = document.getElementById('emailOrUsername');
+            if (loginEmailInput) {
+                loginEmailInput.value = email;
+            }
             
         } catch (error) {
             console.error('Account creation error:', error);
