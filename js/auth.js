@@ -1,20 +1,108 @@
-// Authentication Manager
-class AuthManager {
+// Firebase Authentication Manager
+class FirebaseAuthManager {
     constructor() {
         this.currentUser = null;
-        this.sessionTimeout = 8 * 60 * 60 * 1000; // 8 hours
-        this.users = this.loadUsers();
+        this.auth = null;
+        this.db = null;
         this.loginAttempts = 0;
         this.maxLoginAttempts = 5;
         this.lockoutTime = 15 * 60 * 1000; // 15 minutes
         
-        this.init();
+        // Wait for Firebase to initialize
+        this.waitForFirebase().then(() => {
+            this.init();
+        });
+    }
+
+    async waitForFirebase() {
+        // Wait for Firebase to be available
+        while (!window.firebaseAuth || !window.firebaseDb) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        this.auth = window.firebaseAuth;
+        this.db = window.firebaseDb;
+        console.log('Firebase services connected');
     }
 
     init() {
         this.setupEventListeners();
+        this.setupAuthStateListener();
         this.checkExistingSession();
-        this.setupSessionTimeout();
+    }
+
+    setupAuthStateListener() {
+        // Listen for authentication state changes
+        this.auth.onAuthStateChanged((user) => {
+            if (user) {
+                // User is signed in
+                this.handleAuthStateChange(user);
+            } else {
+                // User is signed out
+                this.currentUser = null;
+                this.showLoginScreen();
+            }
+        });
+    }
+
+    async handleAuthStateChange(firebaseUser) {
+        try {
+            // Get user profile from Firestore
+            const userDoc = await this.db.collection('users').doc(firebaseUser.uid).get();
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                this.currentUser = {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    emailVerified: firebaseUser.emailVerified,
+                    ...userData
+                };
+                
+                this.showMainApp();
+                this.updateUserDisplay();
+                
+                // Initialize other managers after login
+                if (typeof window.app !== 'undefined') {
+                    window.app.init();
+                }
+            } else {
+                // User document doesn't exist, create default profile
+                await this.createUserProfile(firebaseUser);
+            }
+        } catch (error) {
+            console.error('Error handling auth state change:', error);
+            this.showError('Error loading user profile');
+        }
+    }
+
+    async createUserProfile(firebaseUser) {
+        try {
+            const userProfile = {
+                name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
+                email: firebaseUser.email,
+                role: 'cashier', // Default role
+                permissions: ['sales', 'products:view'],
+                avatar: firebaseUser.photoURL || null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            await this.db.collection('users').doc(firebaseUser.uid).set(userProfile);
+            
+            this.currentUser = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                emailVerified: firebaseUser.emailVerified,
+                ...userProfile
+            };
+
+            this.showMainApp();
+            this.updateUserDisplay();
+            this.showSuccess('Welcome! Your account has been set up.');
+        } catch (error) {
+            console.error('Error creating user profile:', error);
+            this.showError('Error setting up user profile');
+        }
     }
 
     setupEventListeners() {
@@ -79,129 +167,17 @@ class AuthManager {
         }
     }
 
-    loadUsers() {
-        // Default users (in production, this would come from a secure backend)
-        const defaultUsers = [
-            {
-                id: 'admin',
-                username: 'admin',
-                password: 'admin123', // In production, this would be hashed
-                name: 'Administrator',
-                role: 'admin',
-                permissions: ['all'],
-                email: 'admin@ogastock.com',
-                avatar: null,
-                createdAt: new Date().toISOString(),
-                lastLogin: null,
-                emailVerified: true
-            },
-            {
-                id: 'manager',
-                username: 'manager',
-                password: 'manager123',
-                name: 'Store Manager',
-                role: 'manager',
-                permissions: ['products', 'orders', 'sales', 'reports'],
-                email: 'manager@ogastock.com',
-                avatar: null,
-                createdAt: new Date().toISOString(),
-                lastLogin: null,
-                emailVerified: true
-            },
-            {
-                id: 'cashier',
-                username: 'cashier',
-                password: 'cashier123',
-                name: 'Cashier',
-                role: 'cashier',
-                permissions: ['sales', 'products:view'],
-                email: 'cashier@ogastock.com',
-                avatar: null,
-                createdAt: new Date().toISOString(),
-                lastLogin: null,
-                emailVerified: true
-            },
-            {
-                id: 'demo',
-                username: 'demo',
-                password: 'demo',
-                name: 'Demo User',
-                role: 'demo',
-                permissions: ['all'],
-                email: 'demo@ogastock.com',
-                avatar: null,
-                createdAt: new Date().toISOString(),
-                lastLogin: null,
-                emailVerified: true
-            }
-        ];
-
-        // Load users from localStorage, fallback to defaults
-        const storedUsers = localStorage.getItem('ogastock-users');
-        if (storedUsers) {
-            try {
-                const parsedUsers = JSON.parse(storedUsers);
-                // Ensure all users have email verification status
-                parsedUsers.forEach(user => {
-                    if (user.emailVerified === undefined) {
-                        user.emailVerified = true; // Default existing users to verified
-                    }
-                });
-                return parsedUsers;
-            } catch (e) {
-                console.warn('Failed to parse stored users, using defaults');
-            }
-        }
-
-        // Save default users
-        this.saveUsers(defaultUsers);
-        return defaultUsers;
-    }
-
-    saveUsers(users) {
-        localStorage.setItem('ogastock-users', JSON.stringify(users));
-    }
-
-    checkExistingSession() {
-        const sessionData = localStorage.getItem('ogastock-session');
-        if (sessionData) {
-            try {
-                const session = JSON.parse(sessionData);
-                if (this.isSessionValid(session)) {
-                    this.currentUser = session.user;
-                    this.showMainApp();
-                    this.updateUserDisplay();
-                    return;
-                }
-            } catch (e) {
-                console.warn('Invalid session data');
-            }
-        }
-        
-        this.showLoginScreen();
-    }
-
-    isSessionValid(session) {
-        if (!session || !session.user || !session.timestamp) {
-            return false;
-        }
-
-        const sessionAge = Date.now() - session.timestamp;
-        return sessionAge < this.sessionTimeout;
-    }
-
-    handleLogin() {
+    async handleLogin() {
         const emailOrUsername = document.getElementById('emailOrUsername').value.trim();
         const password = document.getElementById('password').value;
-        const rememberMe = document.getElementById('rememberMe').checked;
 
         if (!emailOrUsername || !password) {
-            this.showError('Please enter both email/username and password');
+            this.showError('Please enter both email and password');
             return;
         }
 
-        // Validate email format if it looks like an email
-        if (this.isEmail(emailOrUsername) && !this.isValidEmail(emailOrUsername)) {
+        // Validate email format
+        if (!this.isValidEmail(emailOrUsername)) {
             this.showError('Please enter a valid email address');
             return;
         }
@@ -215,182 +191,60 @@ class AuthManager {
         const loginBtn = document.querySelector('.login-btn');
         this.setLoading(loginBtn, true);
 
-        // Simulate API delay for better UX
-        setTimeout(() => {
-            const user = this.authenticateUser(emailOrUsername, password);
+        try {
+            // Sign in with Firebase Auth
+            await this.auth.signInWithEmailAndPassword(emailOrUsername, password);
             
-            if (user) {
-                this.loginSuccess(user, rememberMe);
-            } else {
-                this.loginFailure();
+            // Update last login in Firestore
+            if (this.currentUser) {
+                await this.db.collection('users').doc(this.currentUser.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                });
             }
-            
-            this.setLoading(loginBtn, false);
-        }, 1000);
-    }
 
-    isEmail(input) {
-        return input.includes('@');
-    }
-
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    validateEmailOrUsername(input) {
-        const icon = document.getElementById('loginIcon');
-        const inputValue = input.value.trim();
-        
-        // Change icon based on input type
-        if (this.isEmail(inputValue)) {
-            icon.className = 'fas fa-at';
-            
-            // Validate email format
-            if (inputValue && !this.isValidEmail(inputValue)) {
-                input.setCustomValidity('Please enter a valid email address');
-                input.style.borderColor = '#dc3545';
-            } else {
-                input.setCustomValidity('');
-                input.style.borderColor = '';
-            }
-        } else {
-            icon.className = 'fas fa-user';
-            input.setCustomValidity('');
-            input.style.borderColor = '';
-        }
-    }
-
-    authenticateUser(emailOrUsername, password) {
-        const user = this.users.find(u => {
-            const matchesUsername = u.username.toLowerCase() === emailOrUsername.toLowerCase();
-            const matchesEmail = u.email && u.email.toLowerCase() === emailOrUsername.toLowerCase();
-            const matchesPassword = u.password === password;
-            
-            return (matchesUsername || matchesEmail) && matchesPassword;
-        });
-
-        if (user) {
-            // Update last login
-            user.lastLogin = new Date().toISOString();
-            this.saveUsers(this.users);
-            
             // Reset login attempts on success
             this.loginAttempts = 0;
             localStorage.removeItem('ogastock-lockout');
             localStorage.removeItem('ogastock-login-attempts');
             
-            return user;
-        }
-
-        return null;
-    }
-
-    loginSuccess(user, rememberMe) {
-        this.currentUser = user;
-        
-        // Create session
-        const sessionData = {
-            user: user,
-            timestamp: Date.now(),
-            rememberMe: rememberMe
-        };
-
-        localStorage.setItem('ogastock-session', JSON.stringify(sessionData));
-        
-        // Show success message
-        this.showSuccess(`Welcome back, ${user.name}!`);
-        
-        // Transition to main app
-        this.showMainApp();
-        this.updateUserDisplay();
-        
-        // Initialize other managers after login
-        if (typeof window.app !== 'undefined') {
-            window.app.init();
-        }
-    }
-
-    loginFailure() {
-        this.loginAttempts++;
-        localStorage.setItem('ogastock-login-attempts', this.loginAttempts.toString());
-        
-        if (this.loginAttempts >= this.maxLoginAttempts) {
-            localStorage.setItem('ogastock-lockout', Date.now().toString());
-            this.showError(`Too many failed attempts. Account locked for 15 minutes.`);
-        } else {
-            const remaining = this.maxLoginAttempts - this.loginAttempts;
-            this.showError(`Invalid credentials. ${remaining} attempts remaining.`);
-        }
-        
-        // Clear password field
-        document.getElementById('password').value = '';
-        
-        // Reset input validation styles
-        const emailOrUsernameInput = document.getElementById('emailOrUsername');
-        if (emailOrUsernameInput) {
-            emailOrUsernameInput.style.borderColor = '#dc3545';
-            setTimeout(() => {
-                emailOrUsernameInput.style.borderColor = '';
-            }, 3000);
-        }
-    }
-
-    isLockedOut() {
-        const lockoutTime = localStorage.getItem('ogastock-lockout');
-        if (lockoutTime) {
-            const timeSinceLockout = Date.now() - parseInt(lockoutTime);
-            if (timeSinceLockout < this.lockoutTime) {
-                return true;
-            } else {
-                // Lockout expired
-                localStorage.removeItem('ogastock-lockout');
-                localStorage.removeItem('ogastock-login-attempts');
-                this.loginAttempts = 0;
-            }
-        }
-        return false;
-    }
-
-    loginDemo() {
-        const demoUser = this.users.find(u => u.username === 'demo');
-        if (demoUser) {
-            // Fill in the demo credentials in the form
-            const emailOrUsernameInput = document.getElementById('emailOrUsername');
-            const passwordInput = document.getElementById('password');
+            this.showSuccess('Login successful!');
             
-            if (emailOrUsernameInput) emailOrUsernameInput.value = 'demo';
-            if (passwordInput) passwordInput.value = 'demo';
-            
-            this.loginSuccess(demoUser, false);
-            this.showInfo('Demo mode activated! All features are available for testing.');
-        } else {
-            this.showError('Demo account not available');
+        } catch (error) {
+            this.handleLoginError(error);
+        } finally {
+            this.setLoading(loginBtn, false);
         }
     }
 
-    logout() {
-        // Clear session
-        localStorage.removeItem('ogastock-session');
-        this.currentUser = null;
+    handleLoginError(error) {
+        console.error('Login error:', error);
         
-        // Show logout message
-        this.showInfo('You have been logged out successfully');
+        let errorMessage = 'Login failed. Please try again.';
         
-        // Clear form
-        const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.reset();
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage = 'Invalid email address format';
+                break;
+            case 'auth/user-disabled':
+                errorMessage = 'This account has been disabled';
+                break;
+            case 'auth/user-not-found':
+                errorMessage = 'No account found with this email address';
+                break;
+            case 'auth/wrong-password':
+                errorMessage = 'Incorrect password';
+                break;
+            case 'auth/too-many-requests':
+                errorMessage = 'Too many failed attempts. Please try again later.';
+                break;
+            case 'auth/network-request-failed':
+                errorMessage = 'Network error. Please check your connection.';
+                break;
+            default:
+                errorMessage = error.message || 'Login failed. Please try again.';
         }
         
-        // Reset input styles
-        const emailOrUsernameInput = document.getElementById('emailOrUsername');
-        if (emailOrUsernameInput) {
-            emailOrUsernameInput.style.borderColor = '';
-        }
-        
-        // Show login screen
-        this.showLoginScreen();
+        this.loginFailure(errorMessage);
     }
 
     showLoginScreen() {
@@ -558,8 +412,7 @@ class AuthManager {
         return newUser;
     }
 
-    // Enhanced user management and password recovery
-    showForgotPasswordModal() {
+    async showForgotPasswordModal() {
         const modal = this.createModal('Password Reset', `
             <form id="forgotPasswordForm">
                 <div class="form-group">
@@ -586,7 +439,7 @@ class AuthManager {
         });
     }
 
-    showCreateAccountModal() {
+    async showCreateAccountModal() {
         const modal = this.createModal('Create Account', `
             <form id="createAccountForm">
                 <div class="form-group">
@@ -601,13 +454,6 @@ class AuthManager {
                     <div class="input-group">
                         <i class="fas fa-envelope"></i>
                         <input type="email" id="newEmail" required placeholder="Enter your email address">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="newUsername">Username</label>
-                    <div class="input-group">
-                        <i class="fas fa-user-circle"></i>
-                        <input type="text" id="newUsername" required placeholder="Choose a username">
                     </div>
                 </div>
                 <div class="form-group">
@@ -645,6 +491,353 @@ class AuthManager {
         });
     }
 
+    async handlePasswordReset(form) {
+        const email = form.querySelector('#resetEmail').value.trim();
+        
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email address');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        this.setLoading(submitBtn, true);
+
+        try {
+            await this.auth.sendPasswordResetEmail(email);
+            this.showSuccess('Password reset email sent! Check your inbox for instructions.');
+            form.closest('.modal').remove();
+        } catch (error) {
+            console.error('Password reset error:', error);
+            
+            let errorMessage = 'Failed to send reset email';
+            switch (error.code) {
+                case 'auth/user-not-found':
+                    errorMessage = 'No account found with that email address';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Invalid email address';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage = 'Too many requests. Please try again later.';
+                    break;
+                default:
+                    errorMessage = error.message || 'Failed to send reset email';
+            }
+            
+            this.showError(errorMessage);
+        } finally {
+            this.setLoading(submitBtn, false);
+        }
+    }
+
+    async handleAccountCreation(form) {
+        const name = form.querySelector('#newFullName').value.trim();
+        const email = form.querySelector('#newEmail').value.trim();
+        const password = form.querySelector('#newPassword').value;
+        const confirmPassword = form.querySelector('#confirmPassword').value;
+
+        // Validation
+        if (!name || !email || !password || !confirmPassword) {
+            this.showError('Please fill in all fields');
+            return;
+        }
+
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email address');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showError('Password must be at least 6 characters long');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            this.showError('Passwords do not match');
+            return;
+        }
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        this.setLoading(submitBtn, true);
+
+        try {
+            // Create user account with Firebase Auth
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // Update user profile
+            await user.updateProfile({
+                displayName: name
+            });
+
+            // Send email verification
+            await user.sendEmailVerification();
+
+            // Create user profile in Firestore
+            await this.db.collection('users').doc(user.uid).set({
+                name: name,
+                email: email,
+                role: 'cashier', // Default role for new accounts
+                permissions: ['sales', 'products:view'],
+                avatar: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: false
+            });
+
+            this.showSuccess('Account created successfully! Please check your email to verify your account.');
+            form.closest('.modal').remove();
+            
+        } catch (error) {
+            console.error('Account creation error:', error);
+            
+            let errorMessage = 'Failed to create account';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'An account with this email already exists';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Invalid email address';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Account creation is currently disabled';
+                    break;
+                default:
+                    errorMessage = error.message || 'Failed to create account';
+            }
+            
+            this.showError(errorMessage);
+        } finally {
+            this.setLoading(submitBtn, false);
+        }
+    }
+
+    async logout() {
+        try {
+            await this.auth.signOut();
+            this.currentUser = null;
+            
+            // Clear form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.reset();
+            }
+            
+            // Reset input styles
+            const emailOrUsernameInput = document.getElementById('emailOrUsername');
+            if (emailOrUsernameInput) {
+                emailOrUsernameInput.style.borderColor = '';
+            }
+            
+            this.showInfo('You have been logged out successfully');
+            this.showLoginScreen();
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+            this.showError('Error logging out');
+        }
+    }
+
+    async loginDemo() {
+        try {
+            // Demo login with predefined demo account
+            const demoEmail = 'demo@ogastock.com';
+            const demoPassword = 'demo123';
+            
+            // Fill in the demo credentials in the form
+            const emailOrUsernameInput = document.getElementById('emailOrUsername');
+            const passwordInput = document.getElementById('password');
+            
+            if (emailOrUsernameInput) emailOrUsernameInput.value = demoEmail;
+            if (passwordInput) passwordInput.value = demoPassword;
+            
+            // Try to sign in with demo account
+            await this.auth.signInWithEmailAndPassword(demoEmail, demoPassword);
+            this.showInfo('Demo mode activated! All features are available for testing.');
+            
+        } catch (error) {
+            if (error.code === 'auth/user-not-found') {
+                // Create demo account if it doesn't exist
+                try {
+                    const userCredential = await this.auth.createUserWithEmailAndPassword(demoEmail, 'demo123');
+                    const user = userCredential.user;
+                    
+                    await user.updateProfile({
+                        displayName: 'Demo User'
+                    });
+                    
+                    // Create demo user profile in Firestore
+                    await this.db.collection('users').doc(user.uid).set({
+                        name: 'Demo User',
+                        email: demoEmail,
+                        role: 'demo',
+                        permissions: ['all'],
+                        avatar: null,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                        emailVerified: true
+                    });
+                    
+                    this.showInfo('Demo account created and activated! All features are available for testing.');
+                } catch (createError) {
+                    console.error('Demo account creation error:', createError);
+                    this.showError('Unable to create demo account');
+                }
+            } else {
+                console.error('Demo login error:', error);
+                this.showError('Demo login failed');
+            }
+        }
+    }
+
+    checkExistingSession() {
+        // Firebase handles auth state automatically
+        // This method is kept for compatibility but isn't needed
+        console.log('Firebase auth state will be handled automatically');
+    }
+
+    // Utility methods
+    isEmail(input) {
+        return input.includes('@');
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    validateEmailOrUsername(input) {
+        const icon = document.getElementById('loginIcon');
+        const inputValue = input.value.trim();
+        
+        // Change icon based on input type
+        if (this.isEmail(inputValue)) {
+            icon.className = 'fas fa-at';
+            
+            // Validate email format
+            if (inputValue && !this.isValidEmail(inputValue)) {
+                input.setCustomValidity('Please enter a valid email address');
+                input.style.borderColor = '#dc3545';
+            } else {
+                input.setCustomValidity('');
+                input.style.borderColor = '';
+            }
+        } else {
+            icon.className = 'fas fa-user';
+            input.setCustomValidity('');
+            input.style.borderColor = '';
+        }
+    }
+
+    loginFailure(errorMessage) {
+        this.loginAttempts++;
+        localStorage.setItem('ogastock-login-attempts', this.loginAttempts.toString());
+        
+        if (this.loginAttempts >= this.maxLoginAttempts) {
+            localStorage.setItem('ogastock-lockout', Date.now().toString());
+            this.showError(`Too many failed attempts. Account locked for 15 minutes.`);
+        } else {
+            const remaining = this.maxLoginAttempts - this.loginAttempts;
+            this.showError(`${errorMessage} ${remaining} attempts remaining.`);
+        }
+        
+        // Clear password field
+        document.getElementById('password').value = '';
+        
+        // Reset input validation styles
+        const emailOrUsernameInput = document.getElementById('emailOrUsername');
+        if (emailOrUsernameInput) {
+            emailOrUsernameInput.style.borderColor = '#dc3545';
+            setTimeout(() => {
+                emailOrUsernameInput.style.borderColor = '';
+            }, 3000);
+        }
+    }
+
+    isLockedOut() {
+        const lockoutTime = localStorage.getItem('ogastock-lockout');
+        if (lockoutTime) {
+            const timeSinceLockout = Date.now() - parseInt(lockoutTime);
+            if (timeSinceLockout < this.lockoutTime) {
+                return true;
+            } else {
+                // Lockout expired
+                localStorage.removeItem('ogastock-lockout');
+                localStorage.removeItem('ogastock-login-attempts');
+                this.loginAttempts = 0;
+            }
+        }
+        return false;
+    }
+
+    showLoginScreen() {
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (mainApp) mainApp.style.display = 'none';
+    }
+
+    showMainApp() {
+        const loginScreen = document.getElementById('loginScreen');
+        const mainApp = document.getElementById('mainApp');
+        
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+        if (mainApp) {
+            mainApp.style.display = 'block';
+            mainApp.classList.add('show');
+        }
+    }
+
+    updateUserDisplay() {
+        if (!this.currentUser) return;
+
+        const userName = document.getElementById('userName');
+        const userRole = document.getElementById('userRole');
+        
+        if (userName) userName.textContent = this.currentUser.name || this.currentUser.email;
+        if (userRole) userRole.textContent = this.getRoleDisplayName(this.currentUser.role);
+    }
+
+    getRoleDisplayName(role) {
+        const roleNames = {
+            'admin': 'Administrator',
+            'manager': 'Store Manager',
+            'cashier': 'Cashier',
+            'demo': 'Demo User'
+        };
+        return roleNames[role] || role;
+    }
+
+    togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleBtn = document.getElementById('passwordToggle');
+        const icon = toggleBtn.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            passwordInput.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    setLoading(button, loading) {
+        if (loading) {
+            button.classList.add('loading');
+            button.disabled = true;
+        } else {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    }
+
     createModal(title, content) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -672,100 +865,64 @@ class AuthManager {
         return modal;
     }
 
-    handlePasswordReset(form) {
-        const email = form.querySelector('#resetEmail').value.trim();
-        
-        if (!this.isValidEmail(email)) {
-            this.showError('Please enter a valid email address');
-            return;
-        }
-
-        const user = this.users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-        
-        if (user) {
-            // In a real application, this would send an email
-            // For demo purposes, we'll generate a temporary password
-            const tempPassword = this.generateTemporaryPassword();
-            user.password = tempPassword;
-            user.resetRequired = true;
-            this.saveUsers(this.users);
-            
-            this.showSuccess(`Password reset successful! Your temporary password is: ${tempPassword}\nPlease change it after logging in.`);
-            form.closest('.modal').remove();
+    showError(message) {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show(message, 'error');
         } else {
-            this.showError('No account found with that email address');
+            alert(message); // Fallback for when NotificationManager is not loaded
         }
     }
 
-    handleAccountCreation(form) {
-        const formData = new FormData(form);
-        const name = form.querySelector('#newFullName').value.trim();
-        const email = form.querySelector('#newEmail').value.trim();
-        const username = form.querySelector('#newUsername').value.trim();
-        const password = form.querySelector('#newPassword').value;
-        const confirmPassword = form.querySelector('#confirmPassword').value;
-
-        // Validation
-        if (!name || !email || !username || !password || !confirmPassword) {
-            this.showError('Please fill in all fields');
-            return;
+    showSuccess(message) {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show(message, 'success');
+        } else {
+            console.log('Success: ' + message);
         }
-
-        if (!this.isValidEmail(email)) {
-            this.showError('Please enter a valid email address');
-            return;
-        }
-
-        if (password.length < 6) {
-            this.showError('Password must be at least 6 characters long');
-            return;
-        }
-
-        if (password !== confirmPassword) {
-            this.showError('Passwords do not match');
-            return;
-        }
-
-        // Check if username or email already exists
-        const existingUser = this.users.find(u => 
-            u.username.toLowerCase() === username.toLowerCase() || 
-            (u.email && u.email.toLowerCase() === email.toLowerCase())
-        );
-
-        if (existingUser) {
-            this.showError('Username or email already exists');
-            return;
-        }
-
-        // Create new user
-        const newUser = {
-            id: `user_${Date.now()}`,
-            username: username,
-            password: password, // In production, this would be hashed
-            name: name,
-            role: 'cashier', // Default role for new accounts
-            permissions: ['sales', 'products:view'],
-            email: email,
-            avatar: null,
-            createdAt: new Date().toISOString(),
-            lastLogin: null,
-            emailVerified: false // In production, would require email verification
-        };
-
-        this.users.push(newUser);
-        this.saveUsers(this.users);
-
-        this.showSuccess('Account created successfully! You can now log in.');
-        form.closest('.modal').remove();
     }
 
-    generateTemporaryPassword() {
-        const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-        let password = '';
-        for (let i = 0; i < 8; i++) {
-            password += chars.charAt(Math.floor(Math.random() * chars.length));
+    showInfo(message) {
+        if (typeof NotificationManager !== 'undefined') {
+            NotificationManager.show(message, 'info');
+        } else {
+            console.log('Info: ' + message);
         }
-        return password;
+    }
+
+    // Permission system
+    hasPermission(permission) {
+        if (!this.currentUser) return false;
+        
+        const userPermissions = this.currentUser.permissions || [];
+        
+        // Admin has all permissions
+        if (userPermissions.includes('all')) return true;
+        
+        // Check specific permission
+        return userPermissions.includes(permission);
+    }
+
+    // Role-based access control
+    hasRole(role) {
+        if (!this.currentUser) return false;
+        return this.currentUser.role === role;
+    }
+
+    isAdmin() {
+        return this.hasRole('admin');
+    }
+
+    isManager() {
+        return this.hasRole('manager') || this.isAdmin();
+    }
+
+    isCashier() {
+        return this.hasRole('cashier');
+    }
+
+    // Get current user info
+    getCurrentUser() {
+        return this.currentUser;
     }
 
     // Legacy placeholder methods (keeping for compatibility)
@@ -776,44 +933,11 @@ class AuthManager {
     showForgotPassword() {
         this.showForgotPasswordModal();
     }
-
-    // Get current user info
-    getCurrentUser() {
-        return this.currentUser;
-    }
-
-    // Update user session timestamp (call this on user activity)
-    updateSessionActivity() {
-        if (this.currentUser) {
-            const sessionData = localStorage.getItem('ogastock-session');
-            if (sessionData) {
-                try {
-                    const session = JSON.parse(sessionData);
-                    session.timestamp = Date.now();
-                    localStorage.setItem('ogastock-session', JSON.stringify(session));
-                } catch (e) {
-                    console.warn('Failed to update session activity');
-                }
-            }
-        }
-    }
 }
 
-// Initialize Auth Manager
+// Initialize Firebase Auth Manager
 document.addEventListener('DOMContentLoaded', () => {
-    window.authManager = new AuthManager();
-    
-    // Update session activity on user interactions
-    const activityEvents = ['click', 'keypress', 'scroll', 'mousemove'];
-    let lastActivity = Date.now();
-    
-    activityEvents.forEach(event => {
-        document.addEventListener(event, () => {
-            const now = Date.now();
-            if (now - lastActivity > 60000) { // Update at most once per minute
-                window.authManager.updateSessionActivity();
-                lastActivity = now;
-            }
-        }, { passive: true });
-    });
+    // Use Firebase Auth Manager instead of the old AuthManager
+    window.authManager = new FirebaseAuthManager();
+    console.log('Firebase Authentication Manager initialized');
 });
