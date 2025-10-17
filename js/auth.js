@@ -15,12 +15,44 @@ class FirebaseAuthManager {
         // Show loading screen
         this.showFirebaseLoading();
         
+        let attempts = 0;
+        const maxAttempts = 30; // 3 seconds maximum wait
+        
         // Wait for Firebase to be available
         while (!window.firebaseAuth || !window.firebaseDb) {
+            if (attempts >= maxAttempts) {
+                this.hideFirebaseLoading();
+                this.showError('Failed to connect to Firebase. Please check your internet connection and refresh the page.');
+                console.error('❌ Firebase initialization timeout');
+                return;
+            }
             await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
+        
         this.auth = window.firebaseAuth;
         this.db = window.firebaseDb;
+        
+        // Verify Firebase services are working
+        try {
+            // Test authentication service
+            if (!this.auth || typeof this.auth.signInWithEmailAndPassword !== 'function') {
+                throw new Error('Firebase Authentication service not available');
+            }
+            
+            // Test Firestore service
+            if (!this.db || typeof this.db.collection !== 'function') {
+                throw new Error('Firestore service not available');
+            }
+            
+            console.log('✅ Firebase services connected and verified');
+            
+        } catch (error) {
+            console.error('❌ Firebase service verification failed:', error);
+            this.hideFirebaseLoading();
+            this.showError('Firebase services not available. Please refresh the page.');
+            return;
+        }
         
         // Hide loading screen
         this.hideFirebaseLoading();
@@ -782,54 +814,143 @@ class FirebaseAuthManager {
     }
 
     async loginDemo() {
+        const demoBtn = document.getElementById('demoLogin');
+        
         try {
-            // Demo login with predefined demo account
-            const demoEmail = 'demo@ogastock.com';
-            const demoPassword = 'demo123';
+            // Show loading state
+            if (demoBtn) {
+                this.setLoading(demoBtn, true);
+            }
             
-            // Fill in the demo credentials in the form
+            this.showInfo('Connecting to demo account...');
+            
+            // Demo login credentials
+            const demoEmail = 'demo@ogastock.com';
+            const demoPassword = 'Demo@123456'; // More secure password
+            
+            // Fill in the demo credentials in the form for transparency
             const emailOrUsernameInput = document.getElementById('emailOrUsername');
             const passwordInput = document.getElementById('password');
             
             if (emailOrUsernameInput) emailOrUsernameInput.value = demoEmail;
-            if (passwordInput) passwordInput.value = demoPassword;
+            if (passwordInput) passwordInput.value = '••••••••';
+            
+            // Check if Firebase is initialized
+            if (!this.auth || !this.db) {
+                throw new Error('Firebase services not initialized');
+            }
             
             // Try to sign in with demo account
-            await this.auth.signInWithEmailAndPassword(demoEmail, demoPassword);
-            this.showInfo('Demo mode activated! All features are available for testing.');
+            try {
+                const userCredential = await this.auth.signInWithEmailAndPassword(demoEmail, demoPassword);
+                
+                // Update last login
+                await this.db.collection('users').doc(userCredential.user.uid).update({
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                }).catch(err => console.warn('Could not update last login:', err));
+                
+                this.showSuccess('Demo mode activated! Explore all features with full access.');
+                
+            } catch (signInError) {
+                // If user not found, create the demo account
+                if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/wrong-password') {
+                    console.log('Creating demo account...');
+                    await this.createDemoAccount(demoEmail, demoPassword);
+                } else {
+                    throw signInError;
+                }
+            }
             
         } catch (error) {
-            if (error.code === 'auth/user-not-found') {
-                // Create demo account if it doesn't exist
-                try {
-                    const userCredential = await this.auth.createUserWithEmailAndPassword(demoEmail, 'demo123');
-                    const user = userCredential.user;
-                    
-                    await user.updateProfile({
-                        displayName: 'Demo User'
-                    });
-                    
-                    // Create demo user profile in Firestore
-                    await this.db.collection('users').doc(user.uid).set({
-                        name: 'Demo User',
-                        email: demoEmail,
-                        role: 'demo',
-                        permissions: ['all'],
-                        avatar: null,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
-                        emailVerified: true
-                    });
-                    
-                    this.showInfo('Demo account created and activated! All features are available for testing.');
-                } catch (createError) {
-                    console.error('Demo account creation error:', createError);
-                    this.showError('Unable to create demo account');
-                }
-            } else {
-                console.error('Demo login error:', error);
-                this.showError('Demo login failed');
+            console.error('Demo login error:', error);
+            
+            let errorMessage = 'Demo login failed. ';
+            
+            switch (error.code) {
+                case 'auth/network-request-failed':
+                    errorMessage += 'Please check your internet connection.';
+                    break;
+                case 'auth/too-many-requests':
+                    errorMessage += 'Too many attempts. Please try again later.';
+                    break;
+                case 'auth/api-key-not-valid':
+                    errorMessage += 'Firebase configuration error. Please contact support.';
+                    break;
+                default:
+                    errorMessage += error.message || 'Please try again or contact support.';
             }
+            
+            this.showError(errorMessage);
+            
+            // Clear the form on error
+            const emailOrUsernameInput = document.getElementById('emailOrUsername');
+            const passwordInput = document.getElementById('password');
+            if (emailOrUsernameInput) emailOrUsernameInput.value = '';
+            if (passwordInput) passwordInput.value = '';
+            
+        } finally {
+            // Remove loading state
+            if (demoBtn) {
+                this.setLoading(demoBtn, false);
+            }
+        }
+    }
+
+    async createDemoAccount(email, password) {
+        try {
+            this.showInfo('Setting up demo account for first use...');
+            
+            // Create the demo user account
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // Update user profile
+            await user.updateProfile({
+                displayName: 'Demo User',
+                photoURL: null
+            });
+            
+            // Mark email as verified (skip verification for demo)
+            // Note: This won't actually verify in Firebase, but we'll set it in our DB
+            
+            // Create comprehensive demo user profile in Firestore
+            await this.db.collection('users').doc(user.uid).set({
+                name: 'Demo User',
+                email: email,
+                role: 'demo',
+                permissions: ['all'], // Full permissions for demo
+                avatar: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: true, // Mark as verified in our system
+                accountType: 'demo',
+                bio: 'Demo account for exploring OgaStock features',
+                phone: null,
+                address: null
+            });
+            
+            this.showSuccess('Demo account created successfully! Welcome to OgaStock.');
+            
+        } catch (createError) {
+            console.error('Demo account creation error:', createError);
+            
+            let errorMessage = 'Failed to create demo account. ';
+            
+            switch (createError.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'Demo account exists but login failed. Please try again.';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Demo account password configuration error.';
+                    break;
+                case 'auth/network-request-failed':
+                    errorMessage += 'Network error. Please check your connection.';
+                    break;
+                default:
+                    errorMessage += createError.message || 'Please contact support.';
+            }
+            
+            throw new Error(errorMessage);
         }
     }
 
