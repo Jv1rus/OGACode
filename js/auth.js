@@ -336,26 +336,6 @@ class FirebaseAuthManager {
         }
     }
 
-    setupSessionTimeout() {
-        // Check session validity every minute
-        setInterval(() => {
-            if (this.currentUser) {
-                const sessionData = localStorage.getItem('ogastock-session');
-                if (sessionData) {
-                    try {
-                        const session = JSON.parse(sessionData);
-                        if (!this.isSessionValid(session)) {
-                            this.logout();
-                            this.showError('Session expired. Please log in again.');
-                        }
-                    } catch (e) {
-                        this.logout();
-                    }
-                }
-            }
-        }, 60000); // Check every minute
-    }
-
     // Permission system
     hasPermission(permission) {
         if (!this.currentUser) return false;
@@ -385,31 +365,6 @@ class FirebaseAuthManager {
 
     isCashier() {
         return this.hasRole('cashier');
-    }
-
-    // User management (for admins)
-    createUser(userData) {
-        if (!this.isAdmin()) {
-            throw new Error('Insufficient permissions');
-        }
-
-        const newUser = {
-            id: `user_${Date.now()}`,
-            username: userData.username,
-            password: userData.password, // Should be hashed in production
-            name: userData.name,
-            role: userData.role,
-            permissions: userData.permissions || [],
-            email: userData.email,
-            avatar: null,
-            createdAt: new Date().toISOString(),
-            lastLogin: null
-        };
-
-        this.users.push(newUser);
-        this.saveUsers(this.users);
-        
-        return newUser;
     }
 
     async showForgotPasswordModal() {
