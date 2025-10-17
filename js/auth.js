@@ -768,15 +768,6 @@ class AuthManager {
         return password;
     }
 
-    // Legacy placeholder methods (keeping for compatibility)
-    showCreateAccount() {
-        this.showCreateAccountModal();
-    }
-
-    showForgotPassword() {
-        this.showForgotPasswordModal();
-    }
-
     // Get current user info
     getCurrentUser() {
         return this.currentUser;
