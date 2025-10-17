@@ -4,9 +4,6 @@ class FirebaseAuthManager {
         this.currentUser = null;
         this.auth = null;
         this.db = null;
-        this.loginAttempts = 0;
-        this.maxLoginAttempts = 5;
-        this.lockoutTime = 15 * 60 * 1000; // 15 minutes
         
         // Wait for Firebase to initialize
         this.waitForFirebase().then(() => {
@@ -27,7 +24,6 @@ class FirebaseAuthManager {
     init() {
         this.setupEventListeners();
         this.setupAuthStateListener();
-        this.checkExistingSession();
     }
 
     setupAuthStateListener() {
@@ -182,11 +178,7 @@ class FirebaseAuthManager {
             return;
         }
 
-        // Check for lockout
-        if (this.isLockedOut()) {
-            this.showError('Too many failed attempts. Please try again later.');
-            return;
-        }
+        // Firebase automatically handles rate limiting
 
         const loginBtn = document.querySelector('.login-btn');
         this.setLoading(loginBtn, true);
@@ -202,10 +194,7 @@ class FirebaseAuthManager {
                 });
             }
 
-            // Reset login attempts on success
-            this.loginAttempts = 0;
-            localStorage.removeItem('ogastock-lockout');
-            localStorage.removeItem('ogastock-login-attempts');
+            // Login successful
             
             this.showSuccess('Login successful!');
             
@@ -244,7 +233,7 @@ class FirebaseAuthManager {
                 errorMessage = error.message || 'Login failed. Please try again.';
         }
         
-        this.loginFailure(errorMessage);
+        this.showError(errorMessage);
     }
 
     showLoginScreen() {
@@ -648,151 +637,6 @@ class FirebaseAuthManager {
         }
     }
 
-    checkExistingSession() {
-        // Firebase handles auth state automatically
-        // This method is kept for compatibility but isn't needed
-        console.log('Firebase auth state will be handled automatically');
-    }
-
-    // Utility methods
-    isEmail(input) {
-        return input.includes('@');
-    }
-
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    validateEmailOrUsername(input) {
-        const icon = document.getElementById('loginIcon');
-        const inputValue = input.value.trim();
-        
-        // Change icon based on input type
-        if (this.isEmail(inputValue)) {
-            icon.className = 'fas fa-at';
-            
-            // Validate email format
-            if (inputValue && !this.isValidEmail(inputValue)) {
-                input.setCustomValidity('Please enter a valid email address');
-                input.style.borderColor = '#dc3545';
-            } else {
-                input.setCustomValidity('');
-                input.style.borderColor = '';
-            }
-        } else {
-            icon.className = 'fas fa-user';
-            input.setCustomValidity('');
-            input.style.borderColor = '';
-        }
-    }
-
-    loginFailure(errorMessage) {
-        this.loginAttempts++;
-        localStorage.setItem('ogastock-login-attempts', this.loginAttempts.toString());
-        
-        if (this.loginAttempts >= this.maxLoginAttempts) {
-            localStorage.setItem('ogastock-lockout', Date.now().toString());
-            this.showError(`Too many failed attempts. Account locked for 15 minutes.`);
-        } else {
-            const remaining = this.maxLoginAttempts - this.loginAttempts;
-            this.showError(`${errorMessage} ${remaining} attempts remaining.`);
-        }
-        
-        // Clear password field
-        document.getElementById('password').value = '';
-        
-        // Reset input validation styles
-        const emailOrUsernameInput = document.getElementById('emailOrUsername');
-        if (emailOrUsernameInput) {
-            emailOrUsernameInput.style.borderColor = '#dc3545';
-            setTimeout(() => {
-                emailOrUsernameInput.style.borderColor = '';
-            }, 3000);
-        }
-    }
-
-    isLockedOut() {
-        const lockoutTime = localStorage.getItem('ogastock-lockout');
-        if (lockoutTime) {
-            const timeSinceLockout = Date.now() - parseInt(lockoutTime);
-            if (timeSinceLockout < this.lockoutTime) {
-                return true;
-            } else {
-                // Lockout expired
-                localStorage.removeItem('ogastock-lockout');
-                localStorage.removeItem('ogastock-login-attempts');
-                this.loginAttempts = 0;
-            }
-        }
-        return false;
-    }
-
-    showLoginScreen() {
-        const loginScreen = document.getElementById('loginScreen');
-        const mainApp = document.getElementById('mainApp');
-        
-        if (loginScreen) loginScreen.style.display = 'flex';
-        if (mainApp) mainApp.style.display = 'none';
-    }
-
-    showMainApp() {
-        const loginScreen = document.getElementById('loginScreen');
-        const mainApp = document.getElementById('mainApp');
-        
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-        if (mainApp) {
-            mainApp.style.display = 'block';
-            mainApp.classList.add('show');
-        }
-    }
-
-    updateUserDisplay() {
-        if (!this.currentUser) return;
-
-        const userName = document.getElementById('userName');
-        const userRole = document.getElementById('userRole');
-        
-        if (userName) userName.textContent = this.currentUser.name || this.currentUser.email;
-        if (userRole) userRole.textContent = this.getRoleDisplayName(this.currentUser.role);
-    }
-
-    getRoleDisplayName(role) {
-        const roleNames = {
-            'admin': 'Administrator',
-            'manager': 'Store Manager',
-            'cashier': 'Cashier',
-            'demo': 'Demo User'
-        };
-        return roleNames[role] || role;
-    }
-
-    togglePassword() {
-        const passwordInput = document.getElementById('password');
-        const toggleBtn = document.getElementById('passwordToggle');
-        const icon = toggleBtn.querySelector('i');
-        
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            icon.className = 'fas fa-eye-slash';
-        } else {
-            passwordInput.type = 'password';
-            icon.className = 'fas fa-eye';
-        }
-    }
-
-    setLoading(button, loading) {
-        if (loading) {
-            button.classList.add('loading');
-            button.disabled = true;
-        } else {
-            button.classList.remove('loading');
-            button.disabled = false;
-        }
-    }
-
     createModal(title, content) {
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -820,60 +664,42 @@ class FirebaseAuthManager {
         return modal;
     }
 
-    showError(message) {
-        if (typeof NotificationManager !== 'undefined') {
-            NotificationManager.show(message, 'error');
+    // Utility methods
+    isEmail(input) {
+        return input.includes('@');
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    validateEmailOrUsername(input) {
+        const icon = document.getElementById('loginIcon');
+        if (!icon) return; // Guard against missing element
+        
+        const inputValue = input.value.trim();
+        
+        // Change icon based on input type
+        if (this.isEmail(inputValue)) {
+            icon.className = 'fas fa-at';
+            
+            // Validate email format
+            if (inputValue && !this.isValidEmail(inputValue)) {
+                input.setCustomValidity('Please enter a valid email address');
+                input.style.borderColor = '#dc3545';
+            } else {
+                input.setCustomValidity('');
+                input.style.borderColor = '';
+            }
         } else {
-            alert(message); // Fallback for when NotificationManager is not loaded
+            icon.className = 'fas fa-user';
+            input.setCustomValidity('');
+            input.style.borderColor = '';
         }
     }
 
-    showSuccess(message) {
-        if (typeof NotificationManager !== 'undefined') {
-            NotificationManager.show(message, 'success');
-        } else {
-            console.log('Success: ' + message);
-        }
-    }
-
-    showInfo(message) {
-        if (typeof NotificationManager !== 'undefined') {
-            NotificationManager.show(message, 'info');
-        } else {
-            console.log('Info: ' + message);
-        }
-    }
-
-    // Permission system
-    hasPermission(permission) {
-        if (!this.currentUser) return false;
-        
-        const userPermissions = this.currentUser.permissions || [];
-        
-        // Admin has all permissions
-        if (userPermissions.includes('all')) return true;
-        
-        // Check specific permission
-        return userPermissions.includes(permission);
-    }
-
-    // Role-based access control
-    hasRole(role) {
-        if (!this.currentUser) return false;
-        return this.currentUser.role === role;
-    }
-
-    isAdmin() {
-        return this.hasRole('admin');
-    }
-
-    isManager() {
-        return this.hasRole('manager') || this.isAdmin();
-    }
-
-    isCashier() {
-        return this.hasRole('cashier');
-    }
+    // Firebase handles rate limiting and account lockouts automatically
 
     // Get current user info
     getCurrentUser() {
