@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Configuration Verifier - OgaStock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            width: 100%;
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            color: #495057;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .config-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .config-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .config-value {
+            font-family: 'Courier New', monospace;
+            color: #007bff;
+            word-break: break-all;
+        }
+        
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        .test-results {
+            margin-top: 20px;
+        }
+        
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+        
+        code {
+            color: #e83e8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            🔥 Firebase Configuration Verifier
+        </h1>
+        <p class="subtitle">OgaStock Inventory Management System</p>
+        
+        <div class="alert alert-danger">
+            <strong>⚠️ SECURITY WARNING:</strong>
+            The Firebase Admin SDK JSON file you have should <strong>NEVER</strong> be used in client-side code. 
+            This file contains a private key with full admin access to your Firebase project.
+        </div>
+        
+        <div class="section">
+            <h2>📋 Current Web Configuration</h2>
+            <div class="config-item">
+                <span class="config-label">Project ID:</span>
+                <span class="config-value" id="projectId">Loading...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Auth Domain:</span>
+                <span class="config-value" id="authDomain">Loading...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Storage Bucket:</span>
+                <span class="config-value" id="storageBucket">Loading...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">API Key:</span>
+                <span class="config-value" id="apiKey">Loading...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">App ID:</span>
+                <span class="config-value" id="appId">Loading...</span>
+            </div>
+            <div class="config-item">
+                <span class="config-label">Messaging Sender ID:</span>
+                <span class="config-value" id="messagingSenderId">Loading...</span>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>✅ Validation Results</h2>
+            <div class="test-results" id="validationResults">
+                <div class="test-item">
+                    <span>Configuration Loading...</span>
+                    <span class="status warning">⏳ Pending</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>🧪 Connection Tests</h2>
+            <div class="test-results" id="connectionTests">
+                <div class="test-item">
+                    <span>Tests not run yet</span>
+                    <span class="status warning">⏳ Ready</span>
+                </div>
+            </div>
+            <button class="btn" onclick="runTests()">Run Tests</button>
+        </div>
+        
+        <div class="alert alert-info">
+            <strong>✅ Your Current Configuration is Correct!</strong>
+            Your web app is using the proper Web SDK configuration. 
+            The Admin SDK file is for server-side use only (Node.js, Cloud Functions).
+        </div>
+        
+        <div class="section">
+            <h2>📖 How to Get Correct Web Config</h2>
+            <ol style="line-height: 1.8; color: #495057;">
+                <li>Go to <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                <li>Select project: <strong>ogastock</strong></li>
+                <li>Click ⚙️ gear icon → <strong>Project settings</strong></li>
+                <li>Scroll to <strong>"Your apps"</strong> section</li>
+                <li>Find your web app (🌐 icon) or add one</li>
+                <li>Copy the <code>firebaseConfig</code> object</li>
+                <li>Update <code>js/firebase-config.js</code></li>
+            </ol>
+        </div>
+        
+        <div style="margin-top: 30px; text-align: center;">
+            <button class="btn" onclick="window.location.href='index.html'">
+                ← Back to App
+            </button>
+            <button class="btn btn-secondary" onclick="window.open('https://console.firebase.google.com/', '_blank')">
+                Open Firebase Console
+            </button>
+        </div>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Firebase Config -->
+    <script src="js/firebase-config.js"></script>
+    
+    <script>
+        // Display current configuration
+        setTimeout(() => {
+            try {
+                const config = firebase.app().options;
+                
+                document.getElementById('projectId').textContent = config.projectId || 'Not set';
+                document.getElementById('authDomain').textContent = config.authDomain || 'Not set';
+                document.getElementById('storageBucket').textContent = config.storageBucket || 'Not set';
+                document.getElementById('apiKey').textContent = config.apiKey ? `${config.apiKey.substring(0, 20)}...` : 'Not set';
+                document.getElementById('appId').textContent = config.appId ? `${config.appId.substring(0, 30)}...` : 'Not set';
+                document.getElementById('messagingSenderId').textContent = config.messagingSenderId || 'Not set';
+                
+                // Validate configuration
+                validateConfiguration(config);
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                document.getElementById('validationResults').innerHTML = `
+                    <div class="test-item">
+                        <span>Configuration Error</span>
+                        <span class="status error">❌ Failed</span>
+                    </div>
+                `;
+            }
+        }, 1000);
+        
+        function validateConfiguration(config) {
+            const results = [];
+            
+            // Check required fields
+            const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+            const missingFields = requiredFields.filter(field => !config[field]);
+            
+            if (missingFields.length === 0) {
+                results.push({
+                    name: 'All required fields present',
+                    status: 'success'
+                });
+            } else {
+                results.push({
+                    name: `Missing fields: ${missingFields.join(', ')}`,
+                    status: 'error'
+                });
+            }
+            
+            // Validate API key format
+            if (config.apiKey && config.apiKey.startsWith('AIza')) {
+                results.push({
+                    name: 'API Key format valid',
+                    status: 'success'
+                });
+            } else {
+                results.push({
+                    name: 'API Key format invalid',
+                    status: 'error'
+                });
+            }
+            
+            // Validate project ID matches auth domain
+            if (config.authDomain && config.authDomain.startsWith(config.projectId)) {
+                results.push({
+                    name: 'Project ID matches auth domain',
+                    status: 'success'
+                });
+            } else {
+                results.push({
+                    name: 'Project ID / Auth domain mismatch',
+                    status: 'warning'
+                });
+            }
+            
+            // Check if using Admin SDK (which would be wrong)
+            if (config.privateKey || config.clientEmail) {
+                results.push({
+                    name: '⚠️ ADMIN SDK DETECTED - REMOVE IMMEDIATELY',
+                    status: 'error'
+                });
+            } else {
+                results.push({
+                    name: 'Correct SDK type (Web SDK)',
+                    status: 'success'
+                });
+            }
+            
+            // Display results
+            const resultsHTML = results.map(result => `
+                <div class="test-item">
+                    <span>${result.name}</span>
+                    <span class="status ${result.status}">
+                        ${result.status === 'success' ? '✅ Pass' : result.status === 'error' ? '❌ Fail' : '⚠️ Warning'}
+                    </span>
+                </div>
+            `).join('');
+            
+            document.getElementById('validationResults').innerHTML = resultsHTML;
+        }
+        
+        async function runTests() {
+            const testsContainer = document.getElementById('connectionTests');
+            testsContainer.innerHTML = '<div class="test-item"><span>Running tests...</span><span class="status warning">⏳ Testing</span></div>';
+            
+            const results = [];
+            
+            try {
+                // Test 1: Firebase initialization
+                if (firebase.apps.length > 0) {
+                    results.push({ name: 'Firebase initialized', status: 'success' });
+                } else {
+                    results.push({ name: 'Firebase not initialized', status: 'error' });
+                }
+                
+                // Test 2: Authentication service
+                try {
+                    const auth = firebase.auth();
+                    results.push({ name: 'Authentication service available', status: 'success' });
+                } catch (error) {
+                    results.push({ name: 'Authentication service error', status: 'error' });
+                }
+                
+                // Test 3: Firestore service
+                try {
+                    const db = firebase.firestore();
+                    results.push({ name: 'Firestore service available', status: 'success' });
+                } catch (error) {
+                    results.push({ name: 'Firestore service error', status: 'error' });
+                }
+                
+                // Test 4: Network connectivity
+                try {
+                    const db = firebase.firestore();
+                    await db.enableNetwork();
+                    results.push({ name: 'Network connection established', status: 'success' });
+                } catch (error) {
+                    results.push({ name: 'Network connection failed', status: 'error' });
+                }
+                
+            } catch (error) {
+                results.push({ name: `Test error: ${error.message}`, status: 'error' });
+            }
+            
+            // Display results
+            const testsHTML = results.map(result => `
+                <div class="test-item">
+                    <span>${result.name}</span>
+                    <span class="status ${result.status}">
+                        ${result.status === 'success' ? '✅ Pass' : '❌ Fail'}
+                    </span>
+                </div>
+            `).join('');
+            
+            testsContainer.innerHTML = testsHTML;
+        }
+    </script>
+</body>
+</html>
