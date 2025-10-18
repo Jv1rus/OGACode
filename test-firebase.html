@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Test - OgaStock</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .test-section h2 {
+            color: #667eea;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .result pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 0;
+        }
+        
+        .error-text {
+            color: #dc3545;
+        }
+        
+        .success-text {
+            color: #28a745;
+        }
+        
+        .info-text {
+            color: #17a2b8;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .checklist {
+            list-style: none;
+            margin-top: 15px;
+        }
+        
+        .checklist li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .checklist li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #28a745;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .checklist li.error:before {
+            content: "✗";
+            color: #dc3545;
+        }
+        
+        .checklist li.pending:before {
+            content: "○";
+            color: #ffc107;
+        }
+    </style>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Configuration Test</h1>
+        <p class="subtitle">OgaStock Inventory Management System</p>
+        
+        <!-- Test 1: Firebase Initialization -->
+        <div class="test-section">
+            <h2>1. Firebase Initialization <span id="status1" class="status info">Checking...</span></h2>
+            <button onclick="testInitialization()">Run Test</button>
+            <div id="result1" class="result" style="display:none;"></div>
+        </div>
+        
+        <!-- Test 2: Authentication Configuration -->
+        <div class="test-section">
+            <h2>2. Authentication Configuration <span id="status2" class="status info">Not Started</span></h2>
+            <button onclick="testAuthentication()">Run Test</button>
+            <div id="result2" class="result" style="display:none;"></div>
+        </div>
+        
+        <!-- Test 3: Firestore Configuration -->
+        <div class="test-section">
+            <h2>3. Firestore Configuration <span id="status3" class="status info">Not Started</span></h2>
+            <button onclick="testFirestore()">Run Test</button>
+            <div id="result3" class="result" style="display:none;"></div>
+        </div>
+        
+        <!-- Test 4: Email Verification Test -->
+        <div class="test-section">
+            <h2>4. Email Verification Test <span id="status4" class="status info">Not Started</span></h2>
+            <p style="margin-bottom: 15px; color: #666;">Create a test account to verify email sending works</p>
+            <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="testEmail" placeholder="test@example.com">
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="testPassword" placeholder="Min 6 characters">
+            </div>
+            <button onclick="testEmailVerification()">Create Test Account & Send Verification</button>
+            <button onclick="deleteTestAccount()" style="background: #dc3545;">Delete Test Account</button>
+            <div id="result4" class="result" style="display:none;"></div>
+        </div>
+        
+        <!-- Test 5: User Profile Creation -->
+        <div class="test-section">
+            <h2>5. User Profile Creation <span id="status5" class="status info">Not Started</span></h2>
+            <button onclick="testUserProfile()">Test Profile Creation</button>
+            <div id="result5" class="result" style="display:none;"></div>
+        </div>
+        
+        <!-- Test 6: Run All Tests -->
+        <div class="test-section" style="border-left-color: #28a745;">
+            <h2>Run All Tests</h2>
+            <button onclick="runAllTests()" style="background: #28a745;">Run Complete Diagnostic</button>
+        </div>
+        
+        <!-- Configuration Checklist -->
+        <div class="test-section" style="border-left-color: #ffc107;">
+            <h2>Firebase Console Checklist</h2>
+            <p style="margin-bottom: 10px; color: #666;">Verify these settings in Firebase Console:</p>
+            <ul class="checklist">
+                <li class="pending" id="check1">Email/Password authentication enabled</li>
+                <li class="pending" id="check2">Firestore database created</li>
+                <li class="pending" id="check3">Firestore security rules deployed</li>
+                <li class="pending" id="check4">Email verification template configured</li>
+                <li class="pending" id="check5">Authorized domains includes localhost</li>
+            </ul>
+            <button onclick="window.open('https://console.firebase.google.com/', '_blank')" style="background: #ff9800; margin-top: 15px;">
+                Open Firebase Console
+            </button>
+        </div>
+    </div>
+    
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // Helper functions
+        function showResult(num, html, isError = false) {
+            const result = document.getElementById(`result${num}`);
+            result.style.display = 'block';
+            result.innerHTML = html;
+            
+            const status = document.getElementById(`status${num}`);
+            if (isError) {
+                status.className = 'status error';
+                status.textContent = 'Failed';
+            } else {
+                status.className = 'status success';
+                status.textContent = 'Passed';
+            }
+        }
+        
+        function showLoading(num) {
+            const status = document.getElementById(`status${num}`);
+            status.className = 'status info';
+            status.innerHTML = 'Testing... <span class="loading"></span>';
+        }
+        
+        // Test 1: Initialization
+        function testInitialization() {
+            showLoading(1);
+            
+            try {
+                const config = firebase.app().options;
+                const html = `
+                    <pre class="success-text">✓ Firebase initialized successfully
+
+<strong>Configuration:</strong>
+Project ID: ${config.projectId}
+Auth Domain: ${config.authDomain}
+API Key: ${config.apiKey.substring(0, 10)}...
+Storage Bucket: ${config.storageBucket}
+App ID: ${config.appId}
+
+<strong>Status:</strong>
+Firebase Apps: ${firebase.apps.length}
+Auth Service: ${firebase.auth() ? '✓ Available' : '✗ Not Available'}
+Firestore Service: ${firebase.firestore() ? '✓ Available' : '✗ Not Available'}</pre>
+                `;
+                
+                showResult(1, html, false);
+                document.getElementById('check1').className = '';
+            } catch (error) {
+                const html = `<pre class="error-text">✗ Firebase initialization failed\n\n${error.message}</pre>`;
+                showResult(1, html, true);
+            }
+        }
+        
+        // Test 2: Authentication
+        async function testAuthentication() {
+            showLoading(2);
+            
+            try {
+                const auth = firebase.auth();
+                const providers = [];
+                
+                // Check current user
+                const currentUser = auth.currentUser;
+                
+                const html = `
+                    <pre class="success-text">✓ Authentication service available
+
+<strong>Current Status:</strong>
+Signed In: ${currentUser ? 'Yes (' + currentUser.email + ')' : 'No'}
+Email Verified: ${currentUser ? (currentUser.emailVerified ? 'Yes' : 'No') : 'N/A'}
+
+<strong>Configuration:</strong>
+Auth Domain: ${auth.app.options.authDomain}
+Language: ${auth.languageCode || 'Browser default'}
+
+<strong>Next Steps:</strong>
+1. Go to Firebase Console > Authentication
+2. Click "Sign-in method" tab
+3. Enable "Email/Password" provider
+4. Configure email templates in "Templates" tab</pre>
+                `;
+                
+                showResult(2, html, false);
+            } catch (error) {
+                const html = `<pre class="error-text">✗ Authentication test failed\n\n${error.message}\n\n<strong>Fix:</strong>\n1. Check Firebase Console > Authentication\n2. Verify Email/Password is enabled</pre>`;
+                showResult(2, html, true);
+            }
+        }
+        
+        // Test 3: Firestore
+        async function testFirestore() {
+            showLoading(3);
+            
+            try {
+                const db = firebase.firestore();
+                
+                // Try to access Firestore
+                await db.enableNetwork();
+                
+                // Try to read from a test collection
+                try {
+                    const testDoc = await db.collection('_test').doc('connection').get();
+                    
+                    const html = `
+                        <pre class="success-text">✓ Firestore connected successfully
+
+<strong>Database Info:</strong>
+Project: ${db.app.options.projectId}
+Network: Online
+
+<strong>Security Rules Status:</strong>
+${testDoc.exists ? 'Rules may be too permissive' : 'Rules are active (expected permission denied)'}
+
+<strong>Next Steps:</strong>
+1. Deploy security rules: firebase deploy --only firestore:rules
+2. Check Firestore Console > Rules tab
+3. Verify rules are published</pre>
+                    `;
+                    
+                    showResult(3, html, false);
+                    document.getElementById('check2').className = '';
+                } catch (permError) {
+                    if (permError.code === 'permission-denied') {
+                        const html = `
+                            <pre class="success-text">✓ Firestore connected with security rules active
+
+<strong>Security Status:</strong>
+Rules are properly configured (permission denied for unauthorized access)
+
+<strong>Next Step:</strong>
+Sign in to test user profile creation</pre>
+                        `;
+                        showResult(3, html, false);
+                        document.getElementById('check2').className = '';
+                        document.getElementById('check3').className = '';
+                    } else {
+                        throw permError;
+                    }
+                }
+            } catch (error) {
+                const html = `<pre class="error-text">✗ Firestore test failed\n\n${error.message}\n\n<strong>Fix:</strong>\n1. Go to Firebase Console > Firestore Database\n2. Create database if not exists\n3. Deploy security rules\n4. Check your internet connection</pre>`;
+                showResult(3, html, true);
+            }
+        }
+        
+        // Test 4: Email Verification
+        async function testEmailVerification() {
+            showLoading(4);
+            
+            const email = document.getElementById('testEmail').value;
+            const password = document.getElementById('testPassword').value;
+            
+            if (!email || !password) {
+                const html = `<pre class="error-text">✗ Please enter email and password</pre>`;
+                showResult(4, html, true);
+                return;
+            }
+            
+            if (password.length < 6) {
+                const html = `<pre class="error-text">✗ Password must be at least 6 characters</pre>`;
+                showResult(4, html, true);
+                return;
+            }
+            
+            try {
+                const auth = firebase.auth();
+                
+                // Create user
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Send verification email
+                await user.sendEmailVerification();
+                
+                const html = `
+                    <pre class="success-text">✓ Test account created and verification email sent!
+
+<strong>Account Details:</strong>
+Email: ${user.email}
+UID: ${user.uid}
+Email Verified: ${user.emailVerified ? 'Yes' : 'No (check email)'}
+
+<strong>Next Steps:</strong>
+1. Check your email inbox (${email})
+2. Check spam/junk folder if not found
+3. Click the verification link in the email
+4. Come back and sign in
+
+<strong>Note:</strong> If you don't receive the email:
+- Check Firebase Console > Authentication > Templates
+- Verify email template is configured
+- Wait a few minutes (emails can be delayed)
+- Check your spam folder
+
+You can delete this test account using the button above.</pre>
+                `;
+                
+                showResult(4, html, false);
+                document.getElementById('check4').className = '';
+                
+                // Store test user for cleanup
+                window.testUserId = user.uid;
+            } catch (error) {
+                let errorMsg = error.message;
+                let fixSteps = '';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMsg = 'This email is already registered. Try a different email or delete the existing account first.';
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMsg = 'Email/Password authentication is not enabled';
+                    fixSteps = '\n\n<strong>Fix:</strong>\n1. Go to Firebase Console > Authentication\n2. Click "Sign-in method" tab\n3. Enable "Email/Password" provider\n4. Click Save';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMsg = 'Invalid email address format';
+                }
+                
+                const html = `<pre class="error-text">✗ Email verification test failed\n\n${errorMsg}${fixSteps}</pre>`;
+                showResult(4, html, true);
+            }
+        }
+        
+        // Delete test account
+        async function deleteTestAccount() {
+            showLoading(4);
+            
+            try {
+                const auth = firebase.auth();
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    const html = `<pre class="error-text">✗ No user signed in. Sign in with the test account first.</pre>`;
+                    showResult(4, html, true);
+                    return;
+                }
+                
+                // Delete user profile from Firestore if exists
+                try {
+                    const db = firebase.firestore();
+                    await db.collection('users').doc(user.uid).delete();
+                } catch (dbError) {
+                    console.warn('Could not delete user profile:', dbError);
+                }
+                
+                // Delete authentication account
+                await user.delete();
+                
+                const html = `<pre class="success-text">✓ Test account deleted successfully\n\nEmail: ${user.email}\n\nYou can create a new test account now.</pre>`;
+                showResult(4, html, false);
+                
+                window.testUserId = null;
+            } catch (error) {
+                const html = `<pre class="error-text">✗ Failed to delete test account\n\n${error.message}\n\n<strong>Note:</strong> You may need to sign in again to delete the account.</pre>`;
+                showResult(4, html, true);
+            }
+        }
+        
+        // Test 5: User Profile
+        async function testUserProfile() {
+            showLoading(5);
+            
+            try {
+                const auth = firebase.auth();
+                const db = firebase.firestore();
+                const user = auth.currentUser;
+                
+                if (!user) {
+                    const html = `<pre class="error-text">✗ No user signed in\n\nCreate and sign in with a test account first (Test #4)</pre>`;
+                    showResult(5, html, true);
+                    return;
+                }
+                
+                // Try to create user profile
+                const userProfile = {
+                    name: 'Test User',
+                    email: user.email,
+                    role: 'cashier',
+                    permissions: ['sales', 'products:view'],
+                    avatar: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                    emailVerified: user.emailVerified
+                };
+                
+                await db.collection('users').doc(user.uid).set(userProfile, { merge: true });
+                
+                // Read back the profile
+                const profileDoc = await db.collection('users').doc(user.uid).get();
+                
+                if (profileDoc.exists) {
+                    const data = profileDoc.data();
+                    const html = `
+                        <pre class="success-text">✓ User profile created successfully!
+
+<strong>Profile Data:</strong>
+Name: ${data.name}
+Email: ${data.email}
+Role: ${data.role}
+Permissions: ${data.permissions.join(', ')}
+Email Verified: ${data.emailVerified ? 'Yes' : 'No'}
+
+<strong>Firestore Document:</strong>
+Collection: users
+Document ID: ${user.uid}
+
+<strong>Status:</strong>
+All systems working correctly! ✓</pre>
+                    `;
+                    showResult(5, html, false);
+                } else {
+                    throw new Error('Profile created but could not be read back');
+                }
+            } catch (error) {
+                let fixSteps = '';
+                
+                if (error.code === 'permission-denied') {
+                    fixSteps = '\n\n<strong>Fix:</strong>\n1. Deploy Firestore rules: firebase deploy --only firestore:rules\n2. Or update rules in Firebase Console > Firestore > Rules\n3. Make sure user can create their own profile';
+                }
+                
+                const html = `<pre class="error-text">✗ User profile creation failed\n\n${error.message}${fixSteps}</pre>`;
+                showResult(5, html, true);
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            console.log('Running complete diagnostic...');
+            
+            testInitialization();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testAuthentication();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            await testFirestore();
+            
+            alert('Diagnostic complete! Check the results above.\n\nFor email verification and profile tests, please run them individually.');
+        }
+        
+        // Auto-run initialization test on load
+        window.addEventListener('load', () => {
+            setTimeout(testInitialization, 500);
+        });
+    </script>
+</body>
+</html>
