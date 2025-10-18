@@ -156,12 +156,78 @@ class FirebaseAuthManager {
     }
 
     setupEventListeners() {
-        // Login form submission
+        // Auth Tab Switching
+        const signInTab = document.getElementById('signInTab');
+        const signUpTab = document.getElementById('signUpTab');
         const loginForm = document.getElementById('loginForm');
-        if (loginForm) {
-            loginForm.addEventListener('submit', (e) => {
+        const signUpForm = document.getElementById('signUpForm');
+
+        if (signInTab && signUpTab) {
+            signInTab.addEventListener('click', () => {
+                signInTab.classList.add('active');
+                signUpTab.classList.remove('active');
+                loginForm.classList.add('active');
+                signUpForm.classList.remove('active');
+            });
+
+            signUpTab.addEventListener('click', () => {
+                signUpTab.classList.add('active');
+                signInTab.classList.remove('active');
+                signUpForm.classList.add('active');
+                loginForm.classList.remove('active');
+            });
+        }
+
+        // Login form submission
+        const loginFormEl = document.getElementById('loginForm');
+        if (loginFormEl) {
+            loginFormEl.addEventListener('submit', (e) => {
                 e.preventDefault();
                 this.handleLogin();
+            });
+        }
+
+        // Sign Up form submission
+        const signUpFormEl = document.getElementById('signUpForm');
+        if (signUpFormEl) {
+            signUpFormEl.addEventListener('submit', (e) => {
+                e.preventDefault();
+                this.handleSignUp();
+            });
+        }
+
+        // Password matching validation for signup
+        const signupPassword = document.getElementById('signupPassword');
+        const signupConfirmPassword = document.getElementById('signupConfirmPassword');
+        const passwordMatchError = document.getElementById('passwordMatchError');
+
+        if (signupPassword && signupConfirmPassword && passwordMatchError) {
+            const validatePasswordMatch = () => {
+                if (signupConfirmPassword.value && signupPassword.value !== signupConfirmPassword.value) {
+                    passwordMatchError.style.display = 'block';
+                    signupConfirmPassword.setCustomValidity('Passwords do not match');
+                } else {
+                    passwordMatchError.style.display = 'none';
+                    signupConfirmPassword.setCustomValidity('');
+                }
+            };
+
+            signupPassword.addEventListener('input', validatePasswordMatch);
+            signupConfirmPassword.addEventListener('input', validatePasswordMatch);
+        }
+
+        // Sign up password toggles
+        const signupPasswordToggle = document.getElementById('signupPasswordToggle');
+        if (signupPasswordToggle) {
+            signupPasswordToggle.addEventListener('click', () => {
+                this.togglePasswordField('signupPassword', signupPasswordToggle);
+            });
+        }
+
+        const signupConfirmPasswordToggle = document.getElementById('signupConfirmPasswordToggle');
+        if (signupConfirmPasswordToggle) {
+            signupConfirmPasswordToggle.addEventListener('click', () => {
+                this.togglePasswordField('signupConfirmPassword', signupConfirmPasswordToggle);
             });
         }
 
@@ -189,10 +255,18 @@ class FirebaseAuthManager {
             });
         }
 
-        // Google Sign-In
+        // Google Sign-In (login form)
         const googleBtn = document.getElementById('googleLogin');
         if (googleBtn) {
             googleBtn.addEventListener('click', () => {
+                this.signInWithGoogle();
+            });
+        }
+
+        // Google Sign-Up (signup form)
+        const googleSignUpBtn = document.getElementById('googleSignUp');
+        if (googleSignUpBtn) {
+            googleSignUpBtn.addEventListener('click', () => {
                 this.signInWithGoogle();
             });
         }
@@ -203,16 +277,6 @@ class FirebaseAuthManager {
             logoutBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.logout();
-            });
-        }
-
-        // Account creation
-        const createAccountBtn = document.getElementById('createAccount');
-        if (createAccountBtn) {
-            createAccountBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('Create Account button clicked');
-                this.showCreateAccountModal();
             });
         }
 
@@ -407,6 +471,131 @@ class FirebaseAuthManager {
         } else {
             passwordInput.type = 'password';
             icon.className = 'fas fa-eye';
+        }
+    }
+
+    togglePasswordField(fieldId, toggleBtn) {
+        const passwordInput = document.getElementById(fieldId);
+        const icon = toggleBtn.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.className = 'fas fa-eye-slash';
+        } else {
+            passwordInput.type = 'password';
+            icon.className = 'fas fa-eye';
+        }
+    }
+
+    async handleSignUp() {
+        const fullName = document.getElementById('signupFullName').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        const agreeTerms = document.getElementById('agreeTerms').checked;
+
+        // Validation
+        if (!fullName || !email || !password || !confirmPassword) {
+            this.showError('Please fill in all fields');
+            return;
+        }
+
+        if (!agreeTerms) {
+            this.showError('You must agree to the Terms of Service and Privacy Policy');
+            return;
+        }
+
+        if (!this.isValidEmail(email)) {
+            this.showError('Please enter a valid email address');
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showError('Password must be at least 6 characters long');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            this.showError('Passwords do not match');
+            return;
+        }
+
+        const submitBtn = document.querySelector('#signUpForm button[type="submit"]');
+        this.setLoading(submitBtn, true);
+
+        try {
+            // Create user account with Firebase Auth
+            const userCredential = await this.auth.createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+
+            // Update user profile
+            await user.updateProfile({
+                displayName: fullName
+            });
+
+            // Send email verification
+            await user.sendEmailVerification();
+
+            // Create user profile in Firestore
+            await this.db.collection('users').doc(user.uid).set({
+                name: fullName,
+                email: email,
+                role: 'cashier', // Default role for new accounts
+                permissions: ['sales', 'products:view'],
+                avatar: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: false
+            });
+
+            this.showSuccess('Account created successfully! Please check your email to verify your account before logging in.');
+            
+            // Switch to sign in tab
+            const signInTab = document.getElementById('signInTab');
+            const signUpTab = document.getElementById('signUpTab');
+            const loginForm = document.getElementById('loginForm');
+            const signUpForm = document.getElementById('signUpForm');
+            
+            if (signInTab && signUpTab && loginForm && signUpForm) {
+                signInTab.classList.add('active');
+                signUpTab.classList.remove('active');
+                loginForm.classList.add('active');
+                signUpForm.classList.remove('active');
+            }
+            
+            // Fill the login form with the new email
+            const loginEmailInput = document.getElementById('emailOrUsername');
+            if (loginEmailInput) {
+                loginEmailInput.value = email;
+            }
+
+            // Clear signup form
+            document.getElementById('signUpForm').reset();
+            
+        } catch (error) {
+            console.error('Sign up error:', error);
+            
+            let errorMessage = 'Failed to create account';
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    errorMessage = 'An account with this email already exists';
+                    break;
+                case 'auth/invalid-email':
+                    errorMessage = 'Invalid email address';
+                    break;
+                case 'auth/weak-password':
+                    errorMessage = 'Password is too weak. Please choose a stronger password.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    errorMessage = 'Account creation is currently disabled';
+                    break;
+                default:
+                    errorMessage = error.message || 'Failed to create account';
+            }
+            
+            this.showError(errorMessage);
+        } finally {
+            this.setLoading(submitBtn, false);
         }
     }
 
