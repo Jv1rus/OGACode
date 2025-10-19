@@ -81,13 +81,18 @@ class FirebaseAuthManager {
     }
 
     setupAuthStateListener() {
+        console.log('👂 Setting up auth state listener');
+        
         // Listen for authentication state changes
         this.auth.onAuthStateChanged((user) => {
+            console.log('🔔 Auth state change detected:', user ? user.email : 'No user');
+            
             if (user) {
                 // User is signed in
                 this.handleAuthStateChange(user);
             } else {
                 // User is signed out
+                console.log('🚪 User signed out, showing login screen');
                 this.currentUser = null;
                 this.showLoginScreen();
             }
@@ -95,7 +100,15 @@ class FirebaseAuthManager {
     }
 
     async handleAuthStateChange(firebaseUser) {
+        console.log('🔄 Auth state changed:', firebaseUser ? firebaseUser.email : 'signed out');
+        
         try {
+            // Prevent processing if already logged in
+            if (this.currentUser && this.currentUser.uid === firebaseUser.uid) {
+                console.log('✅ User already logged in, skipping');
+                return;
+            }
+            
             // Get user profile from Firestore
             const userDoc = await this.db.collection('users').doc(firebaseUser.uid).get();
             
@@ -108,25 +121,31 @@ class FirebaseAuthManager {
                     ...userData
                 };
                 
+                console.log('✅ User profile loaded:', this.currentUser.email);
                 this.showMainApp();
                 this.updateUserDisplay();
                 
-                // Initialize other managers after login
-                if (typeof window.app !== 'undefined') {
-                    window.app.init();
+                // Initialize other managers after login (use correct reference)
+                if (typeof window.ogaStockApp !== 'undefined' && typeof window.ogaStockApp.init === 'function') {
+                    window.ogaStockApp.init();
                 }
             } else {
+                console.log('⚠️ User profile not found, creating...');
                 // User document doesn't exist, create default profile
                 await this.createUserProfile(firebaseUser);
             }
         } catch (error) {
-            console.error('Error handling auth state change:', error);
-            this.showError('Error loading user profile');
+            console.error('❌ Error handling auth state change:', error);
+            this.showError('Error loading user profile: ' + error.message);
+            // Sign out on error to prevent loop
+            await this.auth.signOut();
         }
     }
 
     async createUserProfile(firebaseUser) {
         try {
+            console.log('📝 Creating user profile for:', firebaseUser.email);
+            
             const userProfile = {
                 name: firebaseUser.displayName || firebaseUser.email.split('@')[0],
                 email: firebaseUser.email,
@@ -134,10 +153,12 @@ class FirebaseAuthManager {
                 permissions: ['sales', 'products:view'],
                 avatar: firebaseUser.photoURL || null,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp(),
+                emailVerified: firebaseUser.emailVerified || false
             };
 
             await this.db.collection('users').doc(firebaseUser.uid).set(userProfile);
+            console.log('✅ User profile created successfully');
             
             this.currentUser = {
                 uid: firebaseUser.uid,
@@ -149,6 +170,11 @@ class FirebaseAuthManager {
             this.showMainApp();
             this.updateUserDisplay();
             this.showSuccess('Welcome! Your account has been set up.');
+            
+            // Initialize other managers after login
+            if (typeof window.ogaStockApp !== 'undefined' && typeof window.ogaStockApp.init === 'function') {
+                window.ogaStockApp.init();
+            }
         } catch (error) {
             console.error('Error creating user profile:', error);
             this.showError('Error setting up user profile');
@@ -313,33 +339,39 @@ class FirebaseAuthManager {
         this.setLoading(loginBtn, true);
 
         try {
+            console.log('🔐 Attempting login for:', emailOrUsername);
+            
             // Sign in with Firebase Auth
             const userCredential = await this.auth.signInWithEmailAndPassword(emailOrUsername, password);
             const user = userCredential.user;
             
-            // Check if email is verified
+            console.log('✅ Firebase authentication successful');
+            console.log('📧 Email verified:', user.emailVerified);
+            
+            // Check if email is verified (optional - can be disabled for testing)
             if (!user.emailVerified) {
-                this.showEmailVerificationPrompt(user);
+                console.log('⚠️ Email not verified, showing prompt');
+                this.setLoading(loginBtn, false);
+                await this.showEmailVerificationPrompt(user);
                 return;
             }
             
-            // Update last login in Firestore
-            if (this.currentUser) {
-                await this.db.collection('users').doc(this.currentUser.uid).update({
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            }
-
-            this.showSuccess('Login successful! Welcome back.');
+            // Wait a moment for auth state listener to process
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            console.log('✅ Login complete, auth state listener will handle UI update');
             
         } catch (error) {
+            console.error('❌ Login error:', error);
             this.handleLoginError(error);
         } finally {
             this.setLoading(loginBtn, false);
         }
     }
 
-    showEmailVerificationPrompt(user) {
+    async showEmailVerificationPrompt(user) {
+        console.log('📧 Showing email verification prompt');
+        
         const modal = this.createModal('Email Verification Required', `
             <div class="verification-prompt">
                 <div class="verification-icon">
@@ -376,8 +408,9 @@ class FirebaseAuthManager {
             }
         });
 
-        // Sign out the unverified user
-        this.auth.signOut();
+        // Sign out the unverified user (this will trigger auth state change to show login screen)
+        console.log('🚪 Signing out unverified user');
+        await this.auth.signOut();
     }
 
     handleLoginError(error) {
