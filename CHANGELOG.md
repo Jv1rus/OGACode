@@ -1,5 +1,33 @@
 # Changelog - OgaStock PWA
 
+## [October 19, 2025] - Login Loop Fix
+
+### Fixed
+- 🐛 **Infinite login loop** - Auth state listener was processing the same user repeatedly
+- 🐛 **App initialization mismatch** - Fixed `window.app` vs `window.ogaStockApp` reference
+- 🐛 **Missing profile initialization** - App now initializes after creating new user profiles
+- 🐛 **Email verification race condition** - Made verification prompt async and properly awaited
+- 🐛 **No error recovery** - Added try-catch with sign-out on auth errors
+
+### Added
+- ✅ **Duplicate login prevention** - Checks if user is already logged in before processing
+- ✅ **Comprehensive debug logging** - Console logs track entire authentication flow
+- ✅ **Error recovery mechanism** - Automatic sign-out on critical errors to prevent loops
+- ✅ **Better async handling** - Proper await for all async operations
+
+### Changed
+- 📝 **setupAuthStateListener()** - Added logging and duplicate detection
+- 📝 **handleAuthStateChange()** - Added loop prevention check
+- 📝 **createUserProfile()** - Added app initialization call
+- 📝 **handleLogin()** - Enhanced logging and async handling
+- 📝 **showEmailVerificationPrompt()** - Made async for proper flow control
+
+### Documentation
+- 📄 **LOGIN_LOOP_FIX.md** - Complete diagnostic and fix documentation
+- 📄 **CHANGELOG.md** - Updated with login loop fixes
+
+---
+
 ## [October 19, 2025] - Demo Account Removal
 
 ### Removed
