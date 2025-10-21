@@ -1,76 +1,160 @@
 // Firebase Authentication Manager for OgaStock
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { 
+    getAuth, 
+    signInWithEmailAndPassword, 
+    createUserWithEmailAndPassword,
+    signOut,
+    sendPasswordResetEmail,
+    onAuthStateChanged,
+    sendEmailVerification
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+import { 
+    getFirestore, 
+    doc, 
+    setDoc, 
+    getDoc, 
+    updateDoc, 
+    serverTimestamp 
+} from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
 class AuthManager {
     constructor() {
         this.currentUser = null;
         this.initialized = false;
+        this.auth = null;
+        this.db = null;
     }
 
     async initialize() {
         if (this.initialized) return;
         
-        // Listen for auth state changes
-        firebase.auth().onAuthStateChanged(async (user) => {
-            if (user) {
-                await this.handleUserLogin(user);
-            } else {
-                this.currentUser = null;
-            }
-        });
+        try {
+            // Initialize Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyC5aJiXN6iWwrJU9XIdEBUvPwJAH4KpP7Y",
+                authDomain: "ogastock.firebaseapp.com",
+                projectId: "ogastock",
+                storageBucket: "ogastock.firebasestorage.app",
+                messagingSenderId: "471046818751",
+                appId: "1:471046818751:web:f473f012d71a081b0e2f0a"
+            };
 
-        this.initialized = true;
+            const app = initializeApp(firebaseConfig);
+            this.auth = getAuth(app);
+            this.db = getFirestore(app);
+
+            // Listen for auth state changes
+            onAuthStateChanged(this.auth, async (user) => {
+                console.log('Auth state changed:', user ? 'logged in' : 'logged out');
+                
+                if (user) {
+                    await this.handleUserLogin(user);
+                    this.showMainApp();
+                } else {
+                    this.currentUser = null;
+                    this.showLoginPage();
+                }
+            });
+
+            this.initialized = true;
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
+            this.showLoginPage();
+        }
     }
 
     async handleUserLogin(firebaseUser) {
-        const userDoc = await firebase.firestore().collection('users').doc(firebaseUser.uid).get();
-        
-        if (userDoc.exists) {
-            this.currentUser = {
-                uid: firebaseUser.uid,
-                email: firebaseUser.email,
-                emailVerified: firebaseUser.emailVerified,
-                ...userDoc.data()
-            };
+        try {
+            const userDoc = await getDoc(doc(this.db, 'users', firebaseUser.uid));
             
-            await this.updateLastLogin(firebaseUser.uid);
+            if (userDoc.exists()) {
+                this.currentUser = {
+                    uid: firebaseUser.uid,
+                    email: firebaseUser.email,
+                    emailVerified: firebaseUser.emailVerified,
+                    ...userDoc.data()
+                };
+                
+                // Store user data locally for offline access
+                localStorage.setItem('currentUser', JSON.stringify(this.currentUser));
+                
+                await this.updateLastLogin(firebaseUser.uid);
+                console.log('User logged in:', this.currentUser.name);
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
         }
     }
 
     async updateLastLogin(uid) {
-        await firebase.firestore().collection('users').doc(uid).update({
-            lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        try {
+            await updateDoc(doc(this.db, 'users', uid), {
+                lastLogin: serverTimestamp()
+            });
+        } catch (error) {
+            console.error('Error updating last login:', error);
+        }
     }
 
     async login(email, password) {
-        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        return userCredential.user;
+        try {
+            this.showLoader('Signing in...');
+            const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+            this.hideLoader();
+            return { success: true, user: userCredential.user };
+        } catch (error) {
+            this.hideLoader();
+            this.handleAuthError(error);
+            return { success: false, error: error.message };
+        }
     }
 
     async register(email, password, name) {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+        try {
+            this.showLoader('Creating account...');
+            const userCredential = await createUserWithEmailAndPassword(this.auth, email, password);
+            const user = userCredential.user;
 
-        await firebase.firestore().collection('users').doc(user.uid).set({
-            name: name,
-            email: email,
-            role: 'cashier',
-            permissions: ['sales', 'products:view'],
-            avatar: null,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            emailVerified: false
-        });
+            // Create user profile in Firestore
+            await this.createUserProfile(user.uid, {
+                name: name,
+                email: email,
+                role: 'cashier'
+            });
 
-        await user.sendEmailVerification();
-        return user;
+            // Send email verification
+            await sendEmailVerification(user);
+            
+            this.hideLoader();
+            return { success: true, user };
+        } catch (error) {
+            this.hideLoader();
+            this.handleAuthError(error);
+            return { success: false, error: error.message };
+        }
     }
 
     async logout() {
-        await firebase.auth().signOut();
-        this.currentUser = null;
+        try {
+            await signOut(this.auth);
+            this.currentUser = null;
+            localStorage.removeItem('currentUser');
+            console.log('User logged out');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
     }
 
     async resetPassword(email) {
-        await firebase.auth().sendPasswordResetEmail(email);
+        try {
+            await sendPasswordResetEmail(this.auth, email);
+            return { success: true };
+        } catch (error) {
+            this.handleAuthError(error);
+            return { success: false, error: error.message };
+        }
     }
 
     getCurrentUser() {
@@ -79,8 +163,8 @@ class AuthManager {
 
     hasPermission(permission) {
         if (!this.currentUser) return false;
-        if (this.currentUser.permissions.includes('all')) return true;
-        return this.currentUser.permissions.includes(permission);
+        if (this.currentUser.permissions && this.currentUser.permissions.includes('all')) return true;
+        return this.currentUser.permissions && this.currentUser.permissions.includes(permission);
     }
 
     hasRole(role) {
@@ -105,11 +189,11 @@ class AuthManager {
             const userDoc = {
                 name: userData.name,
                 email: userData.email,
-                role: userData.role || 'cashier', // Default to cashier instead of demo
+                role: userData.role || 'cashier',
                 permissions: this.getDefaultPermissions(userData.role || 'cashier'),
                 avatar: userData.avatar || null,
-                createdAt: new Date().toISOString(),
-                lastLogin: new Date().toISOString(),
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
                 emailVerified: userData.emailVerified || false
             };
 
@@ -126,10 +210,90 @@ class AuthManager {
             admin: ['all'],
             manager: ['sales', 'products', 'orders', 'reports', 'customers'],
             cashier: ['sales', 'products:view', 'customers:view']
-            // Remove demo role permissions
         };
         
         return permissions[role] || permissions.cashier;
+    }
+
+    showLoader(message = 'Loading...') {
+        const loader = document.getElementById('authLoader');
+        const loaderText = document.getElementById('authLoaderText');
+        
+        if (loader) {
+            loader.style.display = 'flex';
+        }
+        if (loaderText) {
+            loaderText.textContent = message;
+        }
+    }
+
+    hideLoader() {
+        const loader = document.getElementById('authLoader');
+        if (loader) {
+            loader.style.display = 'none';
+        }
+    }
+
+    handleAuthError(error) {
+        console.error('Auth error:', error);
+        
+        const errorMessages = {
+            'auth/user-not-found': 'No account found with this email address.',
+            'auth/wrong-password': 'Incorrect password. Please try again.',
+            'auth/invalid-email': 'Please enter a valid email address.',
+            'auth/user-disabled': 'This account has been disabled.',
+            'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+            'auth/network-request-failed': 'Network error. Please check your connection.',
+            'auth/email-already-in-use': 'An account with this email already exists.',
+            'auth/weak-password': 'Password should be at least 6 characters long.'
+        };
+        
+        const message = errorMessages[error.code] || error.message || 'An error occurred. Please try again.';
+        this.showError(message);
+    }
+
+    showError(message) {
+        const errorDiv = document.getElementById('loginError');
+        if (errorDiv) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+        console.error('Auth Error:', message);
+    }
+
+    showLoginPage() {
+        const loginPage = document.getElementById('loginPage');
+        const appContainer = document.getElementById('appContainer');
+        
+        if (loginPage) {
+            loginPage.style.display = 'flex';
+        }
+        if (appContainer) {
+            appContainer.style.display = 'none';
+        }
+        
+        this.hideLoader();
+    }
+
+    showMainApp() {
+        const loginPage = document.getElementById('loginPage');
+        const appContainer = document.getElementById('appContainer');
+        
+        if (loginPage) {
+            loginPage.style.display = 'none';
+        }
+        if (appContainer) {
+            appContainer.style.display = 'block';
+        }
+        
+        // Initialize app if available
+        if (window.app && typeof window.app.initialize === 'function') {
+            window.app.initialize();
+        }
     }
 }
 
@@ -137,10 +301,11 @@ class AuthManager {
 const authManager = new AuthManager();
 window.authManager = authManager;
 
-// Auto-initialize when Firebase is ready
-if (typeof firebase !== 'undefined') {
-    authManager.initialize();
-}
+// Auto-initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('Initializing authentication...');
+    await authManager.initialize();
+});
 
 /* Firebase Configuration:
 {
@@ -161,12 +326,6 @@ Firebase Console Setup:
 To manage users and configure the Firebase project:
   appId: "1:471046818751:web:f473f012d71a081b0e2f0a"
 }
-```
-
-### **Demo Access:**
-- Click the "Try Demo Account" button
-- Or use email: `demo@ogastock.com` with password: `demo123`
-- Demo account will be created automatically if it doesn't exist
 
 ## 🔧 Firebase Console Setup
 
