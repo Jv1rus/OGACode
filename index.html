@@ -116,6 +116,8 @@
                     <i class="fab fa-google"></i>
                     Sign in with Google
                 </button>
+                
+                <div id="loginError" class="error-message" style="display: none;"></div>
             </form>
             
             <!-- Sign Up Form -->
@@ -776,5 +778,74 @@
     <script src="js/reports.js"></script>
     <script src="js/notifications.js"></script>
     <script src="js/sw-register.js"></script>
+    <script>
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                authManager.showError('Please enter both email and password.');
+                return;
+            }
+            
+            const result = await authManager.signIn(email, password);
+            
+            if (!result.success) {
+                console.error('Login failed:', result.error);
+            }
+            // Success is handled by auth state listener
+        });
+
+        // Demo account button
+        document.getElementById('demoBtn').addEventListener('click', async () => {
+            const result = await authManager.createDemoAccount();
+            
+            if (!result.success) {
+                console.error('Demo account creation failed:', result.error);
+            }
+            // Success is handled by auth state listener
+        });
+
+        // Create account form handler
+        document.getElementById('createAccountForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('newName').value.trim();
+            const email = document.getElementById('newEmail').value.trim();
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!name || !email || !password || !confirmPassword) {
+                authManager.showError('Please fill in all fields.');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                authManager.showError('Passwords do not match.');
+                return;
+            }
+            
+            if (password.length < 6) {
+                authManager.showError('Password must be at least 6 characters long.');
+                return;
+            }
+            
+            const result = await authManager.createAccount(email, password, name);
+            
+            if (result.success) {
+                authManager.showError('Account created! Please check your email for verification.');
+                document.getElementById('createAccountModal').style.display = 'none';
+            }
+        });
+
+        // Initialize auth manager when DOM is ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Initializing authentication...');
+            await authManager.initialize();
+        });
+    </script>
 </body>
 </html>
