@@ -44,8 +44,10 @@ html {
     margin-bottom: 30px;
 }
 
-.loading-logo i {
-    font-size: 4rem;
+.loading-logo img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
     margin-bottom: 15px;
     display: block;
 }
@@ -256,9 +258,10 @@ html {
     margin-bottom: 10px;
 }
 
-.login-logo i {
-    font-size: 2.5rem;
-    color: #2196F3;
+.login-logo img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
 }
 
 .login-logo h1 {

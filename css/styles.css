@@ -224,6 +224,12 @@ a:hover {
     color: white !important;
 }
 
+.nav-logo img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
 .nav-menu {
     display: flex;
     gap: 30px;
