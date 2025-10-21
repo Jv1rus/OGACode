@@ -799,16 +799,6 @@
             // Success is handled by auth state listener
         });
 
-        // Demo account button
-        document.getElementById('demoBtn').addEventListener('click', async () => {
-            const result = await authManager.createDemoAccount();
-            
-            if (!result.success) {
-                console.error('Demo account creation failed:', result.error);
-            }
-            // Success is handled by auth state listener
-        });
-
         // Create account form handler
         document.getElementById('createAccountForm').addEventListener('submit', async (e) => {
             e.preventDefault();

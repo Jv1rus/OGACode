@@ -17,13 +17,12 @@ The OgaStock application now uses Firebase Authentication instead of local stora
 - **Email/Password Login** - Secure Firebase Auth login
 - **Account Creation** - New user registration with email verification
 - **Password Reset** - Email-based password recovery
-- **Demo Account** - Automatic demo account creation
 - **Session Management** - Firebase handles sessions automatically
 - **Lockout Protection** - Prevents brute force attacks
 
 ### **User Management:**
 - **Firestore Integration** - User profiles stored in Firestore
-- **Role-based Access** - Admin, Manager, Cashier, Demo roles
+- **Role-based Access** - Admin, Manager, Cashier roles
 - **Permission System** - Granular permission control
 - **Email Verification** - Users must verify their email addresses
 - **Profile Management** - User names, avatars, and metadata
@@ -43,10 +42,10 @@ The Firebase project is already configured with these settings:
 }
 ```
 
-### **Demo Access:**
-- Click the "Try Demo Account" button
-- Or use email: `demo@ogastock.com` with password: `demo123`
-- Demo account will be created automatically if it doesn't exist
+### **Access:**
+- Create a new account using the registration form
+- Or have an administrator create an account for you
+- Email verification is required for new accounts
 
 ## 🔧 Firebase Console Setup
 
@@ -64,7 +63,7 @@ users (collection)
 ├── {userId} (document)
     ├── name: "User Name"
     ├── email: "user@example.com"
-    ├── role: "cashier|manager|admin|demo"
+    ├── role: "cashier|manager|admin"
     ├── permissions: ["sales", "products:view"]
     ├── avatar: "photoURL or null"
     ├── createdAt: timestamp
@@ -92,7 +91,6 @@ const user = authManager.getCurrentUser()
 - **Admin**: Full access (`permissions: ['all']`)
 - **Manager**: Products, Orders, Sales, Reports
 - **Cashier**: Sales, Products (view only)
-- **Demo**: Full access for testing
 
 ## 🔒 Security Features
 

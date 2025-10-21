@@ -88,35 +88,48 @@ class AuthManager {
         return this.currentUser.role === role;
     }
 
-    isManager() {
-        return this.hasRole('admin') || this.hasRole('manager');
+    isAdmin() {
+        return this.hasRole('admin');
     }
 
-    async createDemoAccount() {
-        const demoEmail = 'demo@ogastock.com';
-        const demoPassword = 'demo123';
+    isManager() {
+        return this.hasRole('manager') || this.hasRole('admin');
+    }
 
+    isCashier() {
+        return this.hasRole('cashier');
+    }
+
+    async createUserProfile(uid, userData) {
         try {
-            const userCredential = await firebase.auth().createUserWithEmailAndPassword(demoEmail, demoPassword);
-            const user = userCredential.user;
+            const userDoc = {
+                name: userData.name,
+                email: userData.email,
+                role: userData.role || 'cashier', // Default to cashier instead of demo
+                permissions: this.getDefaultPermissions(userData.role || 'cashier'),
+                avatar: userData.avatar || null,
+                createdAt: new Date().toISOString(),
+                lastLogin: new Date().toISOString(),
+                emailVerified: userData.emailVerified || false
+            };
 
-            await firebase.firestore().collection('users').doc(user.uid).set({
-                name: 'Demo User',
-                email: demoEmail,
-                role: 'demo',
-                permissions: ['all'],
-                avatar: null,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                emailVerified: true
-            });
-
-            return user;
+            await setDoc(doc(this.db, 'users', uid), userDoc);
+            return userDoc;
         } catch (error) {
-            if (error.code === 'auth/email-already-in-use') {
-                return await this.login(demoEmail, demoPassword);
-            }
+            console.error('Error creating user profile:', error);
             throw error;
         }
+    }
+
+    getDefaultPermissions(role) {
+        const permissions = {
+            admin: ['all'],
+            manager: ['sales', 'products', 'orders', 'reports', 'customers'],
+            cashier: ['sales', 'products:view', 'customers:view']
+            // Remove demo role permissions
+        };
+        
+        return permissions[role] || permissions.cashier;
     }
 }
 
